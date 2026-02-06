@@ -13,6 +13,8 @@
         {% endif %}
 
         <form method="POST" action="/urls" class="bg-white shadow rounded-lg p-6 space-y-6">
+            <input type="hidden" name="_csrf_token" value="{{ csrf_token }}">
+
             <div>
                 <label for="url" class="block text-sm font-medium text-gray-700 mb-1">URL</label>
                 <input type="url" name="url" id="url" required

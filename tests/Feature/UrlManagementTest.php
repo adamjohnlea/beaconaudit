@@ -29,6 +29,8 @@ final class UrlManagementTest extends TestCase
 
         $loader = new FilesystemLoader(__DIR__ . '/../../src/Views');
         $twig = new Environment($loader, ['strict_variables' => true]);
+        $twig->addGlobal('currentUser', null);
+        $twig->addGlobal('csrf_token', 'test-csrf-token');
 
         $this->controller = new UrlController($urlService, $projectRepository, $twig);
     }
