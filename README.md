@@ -216,4 +216,4 @@ See [DEPLOYMENT.md](DEPLOYMENT.md) for a step-by-step guide to deploying on a Di
 
 ## License
 
-All rights reserved.
+This project is licensed under the [MIT License](LICENSE).
