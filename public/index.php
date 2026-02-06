@@ -6,6 +6,7 @@ declare(strict_types=1);
 $config = require __DIR__ . '/../src/bootstrap.php';
 
 use App\Database\Database;
+use App\Database\MigrationRunner;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\ExportController;
 use App\Http\Controllers\UrlController;
@@ -22,6 +23,9 @@ use Twig\Environment;
 use Twig\Loader\FilesystemLoader;
 
 $database = new Database($config['database']['path']);
+
+$migrationRunner = new MigrationRunner($database);
+$migrationRunner->run();
 
 $urlRepository = new SqliteUrlRepository($database);
 $projectRepository = new SqliteProjectRepository($database);
