@@ -1,0 +1,77 @@
+{% extends "layouts/base.twig" %}
+
+{% block title %}Bulk Import URLs - Beacon Audit{% endblock %}
+
+{% block content %}
+    <div class="max-w-2xl">
+        <h1 class="text-2xl font-bold text-gray-900 mb-6">Bulk Import URLs</h1>
+
+        {% if error is defined %}
+            <div class="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-6">
+                {{ error }}
+            </div>
+        {% endif %}
+
+        <form method="POST" action="/urls/bulk-import" enctype="multipart/form-data" class="bg-white shadow rounded-lg p-6 space-y-6">
+            <input type="hidden" name="_csrf_token" value="{{ csrf_token }}">
+
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Import Method</label>
+                <div class="flex space-x-4">
+                    <label class="inline-flex items-center">
+                        <input type="radio" name="import_type" value="paste" checked
+                               class="text-indigo-600 focus:ring-indigo-500"
+                               onchange="document.getElementById('paste-section').style.display='block'; document.getElementById('csv-section').style.display='none';">
+                        <span class="ml-2 text-sm text-gray-700">Paste URL List</span>
+                    </label>
+                    <label class="inline-flex items-center">
+                        <input type="radio" name="import_type" value="csv"
+                               class="text-indigo-600 focus:ring-indigo-500"
+                               onchange="document.getElementById('csv-section').style.display='block'; document.getElementById('paste-section').style.display='none';">
+                        <span class="ml-2 text-sm text-gray-700">Upload CSV</span>
+                    </label>
+                </div>
+            </div>
+
+            <div id="paste-section">
+                <label for="urls" class="block text-sm font-medium text-gray-700 mb-1">URLs (one per line)</label>
+                <textarea name="urls" id="urls" rows="8"
+                          placeholder="https://example.com&#10;https://another-site.com&#10;https://third-site.org"
+                          class="w-full border-gray-300 rounded-lg shadow-sm focus:ring-indigo-500 focus:border-indigo-500">{{ old.urls is defined ? old.urls : '' }}</textarea>
+            </div>
+
+            <div id="csv-section" style="display: none;">
+                <label for="csv_file" class="block text-sm font-medium text-gray-700 mb-1">CSV File</label>
+                <input type="file" name="csv_file" id="csv_file" accept=".csv"
+                       class="w-full border border-gray-300 rounded-lg shadow-sm text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100">
+                <p class="mt-1 text-xs text-gray-500">CSV must have a <code>url</code> column header. Optional columns: <code>name</code>, <code>frequency</code>.</p>
+            </div>
+
+            <div>
+                <label for="audit_frequency" class="block text-sm font-medium text-gray-700 mb-1">Default Audit Frequency</label>
+                <select name="audit_frequency" id="audit_frequency"
+                        class="w-full border-gray-300 rounded-lg shadow-sm focus:ring-indigo-500 focus:border-indigo-500">
+                    {% for freq in frequencies %}
+                        <option value="{{ freq.value }}" {{ old.audit_frequency is defined and old.audit_frequency == freq.value ? 'selected' : '' }}>{{ freq.label }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div>
+                <label for="project_id" class="block text-sm font-medium text-gray-700 mb-1">Project (optional)</label>
+                <select name="project_id" id="project_id"
+                        class="w-full border-gray-300 rounded-lg shadow-sm focus:ring-indigo-500 focus:border-indigo-500">
+                    <option value="">No project</option>
+                    {% for project in projects %}
+                        <option value="{{ project.id }}">{{ project.name.value }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="flex justify-end space-x-3">
+                <a href="/urls" class="px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50">Cancel</a>
+                <button type="submit" class="px-4 py-2 bg-indigo-600 text-white rounded-lg text-sm font-medium hover:bg-indigo-700">Import URLs</button>
+            </div>
+        </form>
+    </div>
+{% endblock %}

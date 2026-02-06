@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers;
 
+use App\Modules\Url\Application\Services\BulkImportService;
 use App\Modules\Url\Application\Services\UrlService;
 use App\Modules\Url\Domain\Repositories\ProjectRepositoryInterface;
 use App\Modules\Url\Domain\ValueObjects\AuditFrequency;
@@ -19,6 +20,7 @@ final readonly class UrlController
         private UrlService $urlService,
         private ProjectRepositoryInterface $projectRepository,
         private Environment $twig,
+        private BulkImportService $bulkImportService,
     ) {
     }
 
@@ -136,5 +138,67 @@ final readonly class UrlController
         } catch (ValidationException) {
             return new Response('Not Found', 404);
         }
+    }
+
+    public function bulkImport(): Response
+    {
+        $projects = $this->projectRepository->findAll();
+
+        $html = $this->twig->render('urls/bulk-import.twig', [
+            'projects' => $projects,
+            'frequencies' => AuditFrequency::cases(),
+        ]);
+
+        return new Response($html);
+    }
+
+    public function processBulkImport(Request $request): Response
+    {
+        $importType = (string) $request->request->get('import_type', 'paste');
+        $projectId = $request->request->get('project_id');
+        $resolvedProjectId = $projectId !== null && $projectId !== '' ? (int) $projectId : null;
+        $frequency = (string) $request->request->get('audit_frequency', 'weekly');
+
+        if ($importType === 'csv') {
+            $file = $request->files->get('csv_file');
+            if ($file === null) {
+                return $this->renderBulkImportForm('Please select a CSV file to upload.', $request);
+            }
+
+            /** @var \Symfony\Component\HttpFoundation\File\UploadedFile $file */
+            $csvContent = file_get_contents($file->getPathname());
+            if ($csvContent === false || trim($csvContent) === '') {
+                return $this->renderBulkImportForm('The uploaded CSV file is empty.', $request);
+            }
+
+            $result = $this->bulkImportService->importFromCsv($csvContent, $frequency, $resolvedProjectId);
+        } else {
+            $urlsText = (string) $request->request->get('urls', '');
+            if (trim($urlsText) === '') {
+                return $this->renderBulkImportForm('Please enter at least one URL.', $request);
+            }
+
+            $result = $this->bulkImportService->importFromList($urlsText, $frequency, $resolvedProjectId);
+        }
+
+        $html = $this->twig->render('urls/bulk-import-result.twig', [
+            'result' => $result,
+        ]);
+
+        return new Response($html);
+    }
+
+    private function renderBulkImportForm(string $error, Request $request): Response
+    {
+        $projects = $this->projectRepository->findAll();
+
+        $html = $this->twig->render('urls/bulk-import.twig', [
+            'error' => $error,
+            'projects' => $projects,
+            'frequencies' => AuditFrequency::cases(),
+            'old' => $request->request->all(),
+        ]);
+
+        return new Response($html, 422);
     }
 }

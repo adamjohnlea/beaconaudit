@@ -28,6 +28,7 @@ use App\Modules\Auth\Application\Services\UserService;
 use App\Modules\Auth\Infrastructure\Repositories\SqliteUserRepository;
 use App\Modules\Dashboard\Application\Services\DashboardStatistics;
 use App\Modules\Reporting\Application\Services\CsvExportService;
+use App\Modules\Url\Application\Services\BulkImportService;
 use App\Modules\Url\Application\Services\ProjectService;
 use App\Modules\Url\Application\Services\UrlService;
 use App\Modules\Url\Infrastructure\Repositories\SqliteProjectRepository;
@@ -83,8 +84,9 @@ $currentUser = $authService->getCurrentUser();
 $twig->addGlobal('currentUser', $currentUser);
 $twig->addGlobal('csrf_token', $authService->getCsrfToken());
 
+$bulkImportService = new BulkImportService($urlRepository);
 $projectService = new ProjectService($projectRepository);
-$urlController = new UrlController($urlService, $projectRepository, $twig);
+$urlController = new UrlController($urlService, $projectRepository, $twig, $bulkImportService);
 $projectController = new ProjectController($projectService, $twig);
 $dashboardController = new DashboardController($urlRepository, $auditRepository, $dashboardStatistics, $trendCalculator, $twig, $projectRepository, $issueRepository, $auditService);
 $exportController = new ExportController($urlRepository, $auditRepository, $csvExportService, $dashboardStatistics);
@@ -115,6 +117,8 @@ $router->get('/unassigned', DashboardController::class, 'dashboard.unassigned', 
 $router->get('/urls', UrlController::class, 'urls.index', 'urls.index');
 $router->get('/urls/create', UrlController::class, 'urls.create', 'urls.create');
 $router->post('/urls', UrlController::class, 'urls.store', 'urls.store');
+$router->get('/urls/bulk-import', UrlController::class, 'urls.bulkImport', 'urls.bulkImport');
+$router->post('/urls/bulk-import', UrlController::class, 'urls.processBulkImport', 'urls.processBulkImport');
 $router->get('/urls/{id}/edit', UrlController::class, 'urls.edit', 'urls.edit');
 $router->post('/urls/{id}/update', UrlController::class, 'urls.update', 'urls.update');
 $router->post('/urls/{id}/delete', UrlController::class, 'urls.destroy', 'urls.destroy');
@@ -134,7 +138,7 @@ $publicMethods = ['showLogin', 'login'];
 /** @var list<string> $adminOnlyMethods */
 $adminOnlyMethods = [
     'projects.index', 'projects.create', 'projects.store', 'projects.edit', 'projects.update', 'projects.destroy',
-    'urls.index', 'urls.create', 'urls.store', 'urls.edit', 'urls.update', 'urls.destroy',
+    'urls.index', 'urls.create', 'urls.store', 'urls.bulkImport', 'urls.processBulkImport', 'urls.edit', 'urls.update', 'urls.destroy',
     'users.index', 'users.create', 'users.store', 'users.edit', 'users.update', 'users.destroy',
     'runAudit',
 ];
@@ -203,6 +207,8 @@ $response = $router->dispatch($request, static function (array $parameters, Requ
         'urls.index' => $urlController->index(),
         'urls.create' => $urlController->create(),
         'urls.store' => $urlController->store($request),
+        'urls.bulkImport' => $urlController->bulkImport(),
+        'urls.processBulkImport' => $urlController->processBulkImport($request),
         'urls.edit' => $urlController->edit($id ?? 0),
         'urls.update' => $urlController->update($id ?? 0, $request),
         'urls.destroy' => $urlController->destroy($id ?? 0),

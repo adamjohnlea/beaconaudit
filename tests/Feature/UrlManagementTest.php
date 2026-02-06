@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Tests\Feature;
 
 use App\Http\Controllers\UrlController;
+use App\Modules\Url\Application\Services\BulkImportService;
 use App\Modules\Url\Application\Services\UrlService;
 use App\Modules\Url\Infrastructure\Repositories\SqliteProjectRepository;
 use App\Modules\Url\Infrastructure\Repositories\SqliteUrlRepository;
@@ -26,13 +27,14 @@ final class UrlManagementTest extends TestCase
         $this->urlRepository = new SqliteUrlRepository($this->database);
         $projectRepository = new SqliteProjectRepository($this->database);
         $urlService = new UrlService($this->urlRepository);
+        $bulkImportService = new BulkImportService($this->urlRepository);
 
         $loader = new FilesystemLoader(__DIR__ . '/../../src/Views');
         $twig = new Environment($loader, ['strict_variables' => true]);
         $twig->addGlobal('currentUser', null);
         $twig->addGlobal('csrf_token', 'test-csrf-token');
 
-        $this->controller = new UrlController($urlService, $projectRepository, $twig);
+        $this->controller = new UrlController($urlService, $projectRepository, $twig, $bulkImportService);
     }
 
     public function test_index_returns_200(): void
