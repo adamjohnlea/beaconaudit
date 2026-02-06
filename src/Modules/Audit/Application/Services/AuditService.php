@@ -126,15 +126,21 @@ final readonly class AuditService implements AuditServiceInterface
             $category = $this->mapCategory($failingAudit['id']);
             $severity = $this->mapSeverity($failingAudit['score']);
 
+            $elementSelector = null;
+            if (isset($failingAudit['details'][0]['selector'])) {
+                $elementSelector = $failingAudit['details'][0]['selector'];
+            }
+
             $issues[] = new Issue(
                 id: null,
                 auditId: $audit->getId() ?? 0,
                 severity: $severity,
                 category: $category,
-                description: $failingAudit['title'],
-                elementSelector: null,
-                helpUrl: null,
+                description: $this->cleanDescription($failingAudit['description']),
+                elementSelector: $elementSelector,
+                helpUrl: $failingAudit['helpUrl'],
                 createdAt: new DateTimeImmutable(),
+                title: $failingAudit['title'],
             );
         }
 
@@ -167,5 +173,11 @@ final readonly class AuditService implements AuditServiceInterface
             $score < 0.75 => IssueSeverity::MODERATE,
             default => IssueSeverity::MINOR,
         };
+    }
+
+    private function cleanDescription(string $description): string
+    {
+        // Remove markdown links e.g. " [Learn more](url)." or "[Learn how to fix](url)."
+        return trim((string) preg_replace('/\s*\[[^\]]*\]\(https?:\/\/[^)]+\)\.?/', '', $description));
     }
 }

@@ -11,14 +11,34 @@
                 "title": "Background and foreground colors do not have a sufficient contrast ratio.",
                 "description": "Low-contrast text is difficult or impossible for many users to read.",
                 "score": 0,
-                "scoreDisplayMode": "binary"
+                "scoreDisplayMode": "binary",
+                "helpUrl": "https://dequeuniversity.com/rules/axe/4.10/color-contrast",
+                "details": {
+                    "items": [
+                        {
+                            "node": {
+                                "selector": "div.header > p.subtitle"
+                            }
+                        }
+                    ]
+                }
             },
             "image-alt": {
                 "id": "image-alt",
                 "title": "Image elements do not have [alt] attributes",
                 "description": "Informative elements should aim for short, descriptive alternate text.",
                 "score": 0,
-                "scoreDisplayMode": "binary"
+                "scoreDisplayMode": "binary",
+                "helpUrl": "https://dequeuniversity.com/rules/axe/4.10/image-alt",
+                "details": {
+                    "items": [
+                        {
+                            "node": {
+                                "selector": "img.hero-image"
+                            }
+                        }
+                    ]
+                }
             },
             "document-title": {
                 "id": "document-title",

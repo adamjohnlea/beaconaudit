@@ -225,6 +225,16 @@ final class AuditServiceTest extends TestCase
         $this->service->runAudit(1);
 
         $this->assertCount(2, $savedIssues);
+
+        $this->assertSame('Background and foreground colors do not have a sufficient contrast ratio.', $savedIssues[0]->getTitle());
+        $this->assertSame('Low-contrast text is difficult or impossible for many users to read.', $savedIssues[0]->getDescription());
+        $this->assertSame('https://dequeuniversity.com/rules/axe/4.10/color-contrast', $savedIssues[0]->getHelpUrl());
+        $this->assertSame('div.header > p.subtitle', $savedIssues[0]->getElementSelector());
+
+        $this->assertSame('Image elements do not have [alt] attributes', $savedIssues[1]->getTitle());
+        $this->assertSame('Informative elements should aim for short, descriptive alternate text.', $savedIssues[1]->getDescription());
+        $this->assertSame('https://dequeuniversity.com/rules/axe/4.10/image-alt', $savedIssues[1]->getHelpUrl());
+        $this->assertSame('img.hero-image', $savedIssues[1]->getElementSelector());
     }
 
     public function test_run_audit_updates_url_last_audited_at(): void

@@ -19,6 +19,7 @@ final class Issue
         private ?string $elementSelector,
         private ?string $helpUrl,
         private DateTimeImmutable $createdAt,
+        private ?string $title = null,
     ) {
     }
 
@@ -65,5 +66,10 @@ final class Issue
     public function getCreatedAt(): DateTimeImmutable
     {
         return $this->createdAt;
+    }
+
+    public function getTitle(): ?string
+    {
+        return $this->title;
     }
 }

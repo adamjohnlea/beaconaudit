@@ -21,8 +21,8 @@ final readonly class SqliteIssueRepository implements IssueRepositoryInterface
     public function save(Issue $issue): Issue
     {
         $this->database->query(
-            'INSERT INTO issues (audit_id, severity, category, description, element_selector, help_url, created_at)
-             VALUES (?, ?, ?, ?, ?, ?, ?)',
+            'INSERT INTO issues (audit_id, severity, category, description, element_selector, help_url, created_at, title)
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
             [
                 $issue->getAuditId(),
                 $issue->getSeverity()->value,
@@ -31,6 +31,7 @@ final readonly class SqliteIssueRepository implements IssueRepositoryInterface
                 $issue->getElementSelector(),
                 $issue->getHelpUrl(),
                 $issue->getCreatedAt()->format('Y-m-d H:i:s'),
+                $issue->getTitle(),
             ],
         );
 
@@ -76,7 +77,7 @@ final readonly class SqliteIssueRepository implements IssueRepositoryInterface
 
         $issues = [];
 
-        /** @var array{id: string|int, audit_id: string|int, severity: string, category: string, description: string, element_selector: string|null, help_url: string|null, created_at: string} $row */
+        /** @var array{id: string|int, audit_id: string|int, severity: string, category: string, description: string, element_selector: string|null, help_url: string|null, created_at: string, title: string|null} $row */
         foreach ($stmt->fetchAll() as $row) {
             $issues[] = $this->hydrateIssue($row);
         }
@@ -85,7 +86,7 @@ final readonly class SqliteIssueRepository implements IssueRepositoryInterface
     }
 
     /**
-     * @param array{id: string|int, audit_id: string|int, severity: string, category: string, description: string, element_selector: string|null, help_url: string|null, created_at: string} $row
+     * @param array{id: string|int, audit_id: string|int, severity: string, category: string, description: string, element_selector: string|null, help_url: string|null, created_at: string, title: string|null} $row
      */
     private function hydrateIssue(array $row): Issue
     {
@@ -98,6 +99,7 @@ final readonly class SqliteIssueRepository implements IssueRepositoryInterface
             elementSelector: $row['element_selector'],
             helpUrl: $row['help_url'],
             createdAt: new DateTimeImmutable($row['created_at']),
+            title: $row['title'],
         );
     }
 }
