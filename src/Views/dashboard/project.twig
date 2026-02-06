@@ -3,10 +3,20 @@
 {% block title %}{{ project is not null ? project.name.value : 'Unassigned URLs' }} - Beacon Audit{% endblock %}
 
 {% block page_header %}
-    <div class="flex items-center gap-2 text-sm">
-        <a href="/" class="text-text-muted hover:text-text-secondary transition-colors">Dashboard</a>
-        <span class="text-text-muted">/</span>
-        <span class="text-text-primary font-medium">{{ project is not null ? project.name.value : 'Unassigned URLs' }}</span>
+    <div class="flex items-center gap-3 text-sm">
+        <div class="flex items-center gap-2">
+            <a href="/" class="text-text-muted hover:text-text-secondary transition-colors">Dashboard</a>
+            <span class="text-text-muted">/</span>
+            <span class="text-text-primary font-medium">{{ project is not null ? project.name.value : 'Unassigned URLs' }}</span>
+        </div>
+        <div class="flex items-center gap-2 ml-2">
+            <span class="inline-flex items-center h-5.5 px-2 rounded-md text-[11px] font-medium bg-accent-subtle text-text-secondary">{{ summary.totalUrls }} URLs</span>
+            <span class="inline-flex items-center h-5.5 px-2 rounded-md text-[11px] font-medium bg-accent-subtle text-text-secondary">{{ summary.totalAudits }} audits</span>
+            <span class="inline-flex items-center h-5.5 px-2 rounded-md text-[11px] font-medium {% if summary.averageScore >= 90 %}bg-badge-excellent-bg text-badge-excellent-text{% elseif summary.averageScore >= 70 %}bg-badge-good-bg text-badge-good-text{% else %}bg-badge-poor-bg text-badge-poor-text{% endif %}">Avg {{ summary.averageScore }}</span>
+            {% if summary.urlsNeedingAttention > 0 %}
+                <span class="inline-flex items-center h-5.5 px-2 rounded-md text-[11px] font-medium bg-badge-poor-bg text-badge-poor-text">{{ summary.urlsNeedingAttention }} need attention</span>
+            {% endif %}
+        </div>
     </div>
 {% endblock %}
 
@@ -19,59 +29,6 @@
 {% block content %}
 {% if project is not null and project.description is not null %}
     <p class="text-sm text-text-secondary mb-6">{{ project.description }}</p>
-{% endif %}
-
-{# Stats row #}
-<div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-    <div class="bg-surface-raised border border-border rounded-xl p-5">
-        <div class="text-xs font-medium text-text-muted uppercase tracking-wider">Total URLs</div>
-        <div class="mt-2 text-2xl font-semibold text-text-primary">{{ summary.totalUrls }}</div>
-    </div>
-    <div class="bg-surface-raised border border-border rounded-xl p-5">
-        <div class="text-xs font-medium text-text-muted uppercase tracking-wider">Total Audits</div>
-        <div class="mt-2 text-2xl font-semibold text-text-primary">{{ summary.totalAudits }}</div>
-    </div>
-    <div class="bg-surface-raised border border-border rounded-xl p-5">
-        <div class="text-xs font-medium text-text-muted uppercase tracking-wider">Avg Score</div>
-        <div class="mt-2 text-2xl font-semibold {% if summary.averageScore >= 90 %}text-score-excellent{% elseif summary.averageScore >= 70 %}text-score-good{% else %}text-score-poor{% endif %}">
-            {{ summary.averageScore }}
-        </div>
-    </div>
-    <div class="bg-surface-raised border border-border rounded-xl p-5">
-        <div class="text-xs font-medium text-text-muted uppercase tracking-wider">Needs Attention</div>
-        <div class="mt-2 text-2xl font-semibold {% if summary.urlsNeedingAttention > 0 %}text-score-poor{% else %}text-score-excellent{% endif %}">
-            {{ summary.urlsNeedingAttention }}
-        </div>
-    </div>
-</div>
-
-{# Score Distribution #}
-{% if summary.totalUrls > 0 %}
-<div class="bg-surface-raised border border-border rounded-xl mb-8">
-    <div class="px-5 py-4 border-b border-border-subtle">
-        <h2 class="text-sm font-semibold text-text-primary">Score Distribution</h2>
-    </div>
-    <div class="p-5">
-        <div class="grid grid-cols-4 gap-4 text-center">
-            <div>
-                <div class="text-xl font-semibold text-score-excellent">{{ summary.scoreDistribution.excellent }}</div>
-                <div class="text-xs text-text-muted mt-1">Excellent (90+)</div>
-            </div>
-            <div>
-                <div class="text-xl font-semibold text-score-good">{{ summary.scoreDistribution.good }}</div>
-                <div class="text-xs text-text-muted mt-1">Good (70-89)</div>
-            </div>
-            <div>
-                <div class="text-xl font-semibold text-score-warn">{{ summary.scoreDistribution.needsWork }}</div>
-                <div class="text-xs text-text-muted mt-1">Needs Work (50-69)</div>
-            </div>
-            <div>
-                <div class="text-xl font-semibold text-score-poor">{{ summary.scoreDistribution.poor }}</div>
-                <div class="text-xs text-text-muted mt-1">Poor (&lt;50)</div>
-            </div>
-        </div>
-    </div>
-</div>
 {% endif %}
 
 {# URL Table #}
@@ -101,11 +58,11 @@
                 <tbody>
                     {% for urlSummary in urlSummaries %}
                     <tr class="border-b border-border-subtle last:border-0 hover:bg-accent-subtle transition-colors duration-100">
-                        <td class="px-5 py-3.5">
-                            <div class="text-sm font-medium text-text-primary">{{ urlSummary.name }}</div>
-                            <div class="text-xs text-text-muted">{{ urlSummary.address }}</div>
+                        <td class="px-5 py-2.5">
+                            <span class="text-sm font-medium text-text-primary">{{ urlSummary.name }}</span>
+                            <a href="{{ urlSummary.address }}" target="_blank" rel="noopener noreferrer" class="text-xs text-text-muted hover:text-text-secondary underline underline-offset-2 decoration-stone-300 hover:decoration-stone-400 transition-colors ml-1.5">{{ urlSummary.address }}</a>
                         </td>
-                        <td class="px-5 py-3.5">
+                        <td class="px-5 py-2.5">
                             {% if urlSummary.latestScore is not null %}
                                 <span class="text-sm font-semibold {% if urlSummary.latestScore >= 90 %}text-score-excellent{% elseif urlSummary.latestScore >= 70 %}text-score-good{% else %}text-score-poor{% endif %}">
                                     {{ urlSummary.latestScore }}
@@ -114,7 +71,7 @@
                                 <span class="text-sm text-text-muted">&mdash;</span>
                             {% endif %}
                         </td>
-                        <td class="px-5 py-3.5">
+                        <td class="px-5 py-2.5">
                             <span class="inline-flex items-center px-2 py-0.5 rounded-md text-xs font-medium
                                 {% if urlSummary.scoreGrade == 'A' %}bg-badge-excellent-bg text-badge-excellent-text
                                 {% elseif urlSummary.scoreGrade == 'B' %}bg-badge-good-bg text-badge-good-text
@@ -124,20 +81,20 @@
                                 {{ urlSummary.scoreGrade }}
                             </span>
                         </td>
-                        <td class="px-5 py-3.5 text-sm text-text-secondary">
+                        <td class="px-5 py-2.5 text-sm text-text-secondary">
                             {{ urlSummary.totalAudits }}
                         </td>
-                        <td class="px-5 py-3.5 text-sm text-text-secondary">
+                        <td class="px-5 py-2.5 text-sm text-text-secondary">
                             {{ urlSummary.frequency }}
                         </td>
-                        <td class="px-5 py-3.5">
+                        <td class="px-5 py-2.5">
                             {% if urlSummary.enabled %}
                                 <span class="inline-flex items-center px-2 py-0.5 rounded-md text-xs font-medium bg-badge-excellent-bg text-badge-excellent-text">Active</span>
                             {% else %}
                                 <span class="inline-flex items-center px-2 py-0.5 rounded-md text-xs font-medium bg-accent-subtle text-text-secondary">Paused</span>
                             {% endif %}
                         </td>
-                        <td class="px-5 py-3.5 text-right">
+                        <td class="px-5 py-2.5 text-right">
                             <div class="flex items-center justify-end gap-2">
                                 <a href="/dashboard/{{ urlSummary.urlId }}" class="inline-flex items-center h-7 px-2.5 text-[12px] font-medium rounded-md border border-border text-text-secondary hover:text-text-primary hover:border-text-muted transition-colors duration-150">View</a>
                                 {% if currentUser is defined and currentUser is not null and currentUser.admin %}
