@@ -46,7 +46,7 @@ final readonly class BulkImportService
 
         $headerLine = array_shift($lines);
         /** @var array<string> $headers */
-        $headers = str_getcsv($headerLine);
+        $headers = str_getcsv($headerLine, ',', '"', '');
         $headers = array_map(static fn (string $h): string => strtolower(trim($h)), $headers);
 
         $urlIndex = array_search('url', $headers, true);
@@ -62,7 +62,7 @@ final readonly class BulkImportService
         foreach ($lines as $line) {
             $lineNumber++;
             /** @var array<string> $fields */
-            $fields = str_getcsv($line);
+            $fields = str_getcsv($line, ',', '"', '');
 
             $url = isset($fields[$urlIndex]) ? trim($fields[$urlIndex]) : '';
             if ($url === '') {
