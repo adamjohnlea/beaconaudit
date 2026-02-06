@@ -1,0 +1,129 @@
+{% extends "layouts/base.twig" %}
+
+{% block title %}{{ url.name ?? url.url.value }} - Beacon Audit{% endblock %}
+
+{% block content %}
+<div class="mb-8">
+    <div class="flex items-center justify-between">
+        <div>
+            <a href="/" class="text-sm text-indigo-600 hover:text-indigo-800">&larr; Back to Dashboard</a>
+            <h1 class="mt-2 text-2xl font-bold text-gray-900">{{ url.name ?? url.url.value }}</h1>
+            <p class="mt-1 text-sm text-gray-500">{{ url.url.value }}</p>
+        </div>
+        <div class="text-right">
+            <div class="text-sm text-gray-500">Current Score</div>
+            {% if latestScore is not null %}
+                <div class="text-4xl font-bold {% if latestScore >= 90 %}text-green-600{% elseif latestScore >= 70 %}text-yellow-600{% else %}text-red-600{% endif %}">
+                    {{ latestScore }}
+                </div>
+            {% else %}
+                <div class="text-4xl font-bold text-gray-400">--</div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+    <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+        <div class="text-sm font-medium text-gray-500">Average Score</div>
+        <div class="mt-2 text-3xl font-bold text-gray-900">{{ averageScore }}</div>
+    </div>
+
+    <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+        <div class="text-sm font-medium text-gray-500">Trend</div>
+        <div class="mt-2 text-3xl font-bold
+            {% if trend.value == 'improving' %}text-green-600
+            {% elseif trend.value == 'degrading' %}text-red-600
+            {% else %}text-gray-600{% endif %}">
+            {% if trend.value == 'improving' %}&uarr;{% elseif trend.value == 'degrading' %}&darr;{% else %}&rarr;{% endif %}
+            {{ trend.label }}
+        </div>
+    </div>
+
+    <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+        <div class="text-sm font-medium text-gray-500">Total Audits</div>
+        <div class="mt-2 text-3xl font-bold text-gray-900">{{ audits|length }}</div>
+    </div>
+</div>
+
+{% if graphData is not empty %}
+<div class="bg-white rounded-lg shadow-sm border border-gray-200 mb-8">
+    <div class="px-6 py-4 border-b border-gray-200">
+        <h2 class="text-lg font-semibold text-gray-900">Score History</h2>
+    </div>
+    <div class="p-6">
+        <div class="flex items-end space-x-2" style="height: 200px;">
+            {% for point in graphData %}
+                <div class="flex-1 flex flex-col items-center justify-end">
+                    <div class="text-xs font-medium mb-1
+                        {% if point.score >= 90 %}text-green-600
+                        {% elseif point.score >= 70 %}text-yellow-600
+                        {% else %}text-red-600{% endif %}">
+                        {{ point.score }}
+                    </div>
+                    <div class="w-full rounded-t
+                        {% if point.score >= 90 %}bg-green-500
+                        {% elseif point.score >= 70 %}bg-yellow-500
+                        {% else %}bg-red-500{% endif %}"
+                        style="height: {{ point.score * 2 }}px;">
+                    </div>
+                    <div class="text-xs text-gray-400 mt-1">{{ point.date }}</div>
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<div class="bg-white rounded-lg shadow-sm border border-gray-200">
+    <div class="px-6 py-4 border-b border-gray-200">
+        <div class="flex items-center justify-between">
+            <h2 class="text-lg font-semibold text-gray-900">Audit History</h2>
+            <a href="/dashboard/{{ url.id }}/export" class="inline-flex items-center px-3 py-1.5 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">Export CSV</a>
+        </div>
+    </div>
+
+    {% if audits is empty %}
+        <div class="p-6 text-center text-gray-500">
+            <p>No audits have been run yet.</p>
+        </div>
+    {% else %}
+        <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-gray-50">
+                    <tr>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Score</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                    </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200">
+                    {% for audit in audits %}
+                    <tr>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                            {{ audit.auditDate|date('Y-m-d H:i') }}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <span class="text-sm font-semibold
+                                {% if audit.score.value >= 90 %}text-green-600
+                                {% elseif audit.score.value >= 70 %}text-yellow-600
+                                {% else %}text-red-600{% endif %}">
+                                {{ audit.score.value }}
+                            </span>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium
+                                {% if audit.status.value == 'completed' %}bg-green-100 text-green-800
+                                {% elseif audit.status.value == 'failed' %}bg-red-100 text-red-800
+                                {% else %}bg-yellow-100 text-yellow-800{% endif %}">
+                                {{ audit.status.label }}
+                            </span>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}
