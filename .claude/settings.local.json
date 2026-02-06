@@ -1,0 +1,14 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git init:*)",
+      "Bash(git branch:*)",
+      "Bash(composer install:*)",
+      "Bash(npm install:*)",
+      "Bash(vendor/bin/phpstan analyse:*)",
+      "Bash(vendor/bin/phpunit:*)",
+      "Bash(vendor/bin/php-cs-fixer fix:*)",
+      "Bash(npm run build:*)"
+    ]
+  }
+}

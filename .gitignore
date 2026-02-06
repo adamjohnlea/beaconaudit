@@ -1,0 +1,39 @@
+# Dependencies
+/vendor/
+/node_modules/
+
+# Build artifacts
+/public/css/app.css
+/public/js/app.js
+
+# Storage
+/storage/database.sqlite
+/storage/logs/*.log
+/storage/cache/*
+
+# IDE
+/.idea/
+/.vscode/
+*.swp
+*.swo
+
+# PHPUnit
+/.phpunit.cache/
+/coverage/
+
+# PHPStan
+/.phpstan/
+
+# PHP CS Fixer
+/.php-cs-fixer.cache
+
+# Infection
+/infection.log
+
+# Environment
+.env
+.env.local
+
+# OS
+.DS_Store
+Thumbs.db
