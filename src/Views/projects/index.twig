@@ -1,0 +1,43 @@
+{% extends "layouts/base.twig" %}
+
+{% block title %}Projects - Beacon Audit{% endblock %}
+
+{% block content %}
+<div class="mb-8">
+    <div class="flex items-center justify-between">
+        <h1 class="text-2xl font-bold text-gray-900">Projects</h1>
+        <a href="/projects/create" class="inline-flex items-center px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-md hover:bg-indigo-700">Add Project</a>
+    </div>
+</div>
+
+<div class="bg-white rounded-lg shadow-sm border border-gray-200">
+    <div class="overflow-x-auto">
+        <table class="min-w-full divide-y divide-gray-200">
+            <thead class="bg-gray-50">
+                <tr>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Description</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Created</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                </tr>
+            </thead>
+            <tbody class="bg-white divide-y divide-gray-200">
+                {% for project in projects %}
+                <tr>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{{ project.name.value }}</td>
+                    <td class="px-6 py-4 text-sm text-gray-500">{{ project.description ?? '-' }}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ project.createdAt|date('Y-m-d') }}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm">
+                        <a href="/projects/{{ project.id }}/edit" class="text-indigo-600 hover:text-indigo-900 mr-3">Edit</a>
+                        <form method="POST" action="/projects/{{ project.id }}/delete" class="inline" onsubmit="return confirm('Are you sure you want to delete this project? All URLs will become unassigned.')">
+                            <input type="hidden" name="_csrf_token" value="{{ csrf_token }}">
+                            <button type="submit" class="text-red-600 hover:text-red-900">Delete</button>
+                        </form>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

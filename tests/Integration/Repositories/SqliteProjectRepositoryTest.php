@@ -87,6 +87,22 @@ final class SqliteProjectRepositoryTest extends TestCase
         $this->assertNull($this->repository->findById($saved->getId() ?? 0));
     }
 
+    public function test_update_modifies_existing_project(): void
+    {
+        $saved = $this->repository->save($this->createProject('Original', 'Original desc'));
+
+        $saved->setName(new ProjectName('Updated'));
+        $saved->setDescription('Updated desc');
+        $saved->setUpdatedAt(new DateTimeImmutable());
+
+        $updated = $this->repository->update($saved);
+
+        $found = $this->repository->findById($updated->getId() ?? 0);
+        $this->assertNotNull($found);
+        $this->assertSame('Updated', $found->getName()->getValue());
+        $this->assertSame('Updated desc', $found->getDescription());
+    }
+
     public function test_save_enforces_unique_name_constraint(): void
     {
         $this->repository->save($this->createProject('Duplicate'));

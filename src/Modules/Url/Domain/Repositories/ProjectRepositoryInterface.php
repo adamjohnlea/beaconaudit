@@ -10,6 +10,8 @@ interface ProjectRepositoryInterface
 {
     public function save(Project $project): Project;
 
+    public function update(Project $project): Project;
+
     public function findById(int $id): ?Project;
 
     public function findByName(string $name): ?Project;

@@ -107,6 +107,18 @@ final readonly class SqliteUrlRepository implements UrlRepositoryInterface
     /**
      * @return array<Url>
      */
+    public function findUnassigned(): array
+    {
+        $stmt = $this->database->query(
+            'SELECT * FROM urls WHERE project_id IS NULL ORDER BY name ASC',
+        );
+
+        return $this->hydrateMany($stmt->fetchAll());
+    }
+
+    /**
+     * @return array<Url>
+     */
     public function findEnabled(): array
     {
         $stmt = $this->database->query(

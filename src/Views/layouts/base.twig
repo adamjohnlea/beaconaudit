@@ -14,9 +14,22 @@
                     <a href="/" class="text-xl font-bold text-gray-900">Beacon Audit</a>
                     <div class="ml-10 flex space-x-8">
                         <a href="/" class="text-gray-600 hover:text-gray-900 px-3 py-2 text-sm font-medium">Dashboard</a>
-                        <a href="/urls" class="text-gray-600 hover:text-gray-900 px-3 py-2 text-sm font-medium">URLs</a>
+                        {% if currentUser is defined and currentUser is not null and currentUser.admin %}
+                            <a href="/projects" class="text-gray-600 hover:text-gray-900 px-3 py-2 text-sm font-medium">Projects</a>
+                            <a href="/urls" class="text-gray-600 hover:text-gray-900 px-3 py-2 text-sm font-medium">URLs</a>
+                            <a href="/users" class="text-gray-600 hover:text-gray-900 px-3 py-2 text-sm font-medium">Users</a>
+                        {% endif %}
                     </div>
                 </div>
+                {% if currentUser is defined and currentUser is not null %}
+                    <div class="flex items-center space-x-4">
+                        <span class="text-sm text-gray-600">{{ currentUser.email.value }}</span>
+                        <form method="POST" action="/logout">
+                            <input type="hidden" name="_csrf_token" value="{{ csrf_token }}">
+                            <button type="submit" class="text-sm text-gray-600 hover:text-gray-900">Logout</button>
+                        </form>
+                    </div>
+                {% endif %}
             </div>
         </div>
     </nav>

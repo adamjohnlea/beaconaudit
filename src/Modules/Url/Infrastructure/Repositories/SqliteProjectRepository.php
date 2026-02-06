@@ -37,6 +37,21 @@ final readonly class SqliteProjectRepository implements ProjectRepositoryInterfa
         return $project;
     }
 
+    public function update(Project $project): Project
+    {
+        $this->database->query(
+            'UPDATE projects SET name = ?, description = ?, updated_at = ? WHERE id = ?',
+            [
+                $project->getName()->getValue(),
+                $project->getDescription(),
+                $project->getUpdatedAt()->format('Y-m-d H:i:s'),
+                $project->getId(),
+            ],
+        );
+
+        return $project;
+    }
+
     public function findById(int $id): ?Project
     {
         $stmt = $this->database->query(

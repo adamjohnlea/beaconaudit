@@ -27,6 +27,11 @@ interface UrlRepositoryInterface
     /**
      * @return array<Url>
      */
+    public function findUnassigned(): array;
+
+    /**
+     * @return array<Url>
+     */
     public function findEnabled(): array;
 
     public function delete(int $id): void;

@@ -86,6 +86,22 @@ final class SqliteUrlRepositoryTest extends TestCase
         $this->assertCount(2, $found);
     }
 
+    public function test_find_unassigned_returns_urls_without_project(): void
+    {
+        $project = $this->projectRepository->save($this->createProject('Test Project'));
+        $projectId = $project->getId() ?? 0;
+
+        $this->urlRepository->save($this->createUrl('https://assigned.com', 'Assigned', $projectId));
+        $this->urlRepository->save($this->createUrl('https://unassigned1.com', 'Unassigned 1'));
+        $this->urlRepository->save($this->createUrl('https://unassigned2.com', 'Unassigned 2'));
+
+        $unassigned = $this->urlRepository->findUnassigned();
+
+        $this->assertCount(2, $unassigned);
+        $this->assertSame('Unassigned 1', $unassigned[0]->getName());
+        $this->assertSame('Unassigned 2', $unassigned[1]->getName());
+    }
+
     public function test_find_enabled_returns_only_enabled_urls(): void
     {
         $this->urlRepository->save($this->createUrl('https://enabled.com', 'Enabled', null, true));
