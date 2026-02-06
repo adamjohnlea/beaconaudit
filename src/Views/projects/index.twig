@@ -25,7 +25,7 @@
             <tbody>
                 {% for project in projects %}
                 <tr class="border-b border-border-subtle last:border-0 hover:bg-accent-subtle transition-colors duration-100">
-                    <td class="px-5 py-3.5 text-sm font-medium text-text-primary">{{ project.name.value }}</td>
+                    <td class="px-5 py-3.5 text-sm font-medium"><a href="/projects/{{ project.id }}/dashboard" class="group/link inline-flex items-center gap-1 text-text-primary hover:text-accent transition-colors duration-150">{{ project.name.value }}<svg width="12" height="12" class="text-text-muted group-hover/link:text-accent group-hover/link:translate-x-0.5 transition-all duration-150" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg></a></td>
                     <td class="px-5 py-3.5 text-sm text-text-secondary">{{ project.description ?? '&mdash;' }}</td>
                     <td class="px-5 py-3.5 text-sm text-text-secondary">{{ project.createdAt|date('Y-m-d') }}</td>
                     <td class="px-5 py-3.5 text-right">
