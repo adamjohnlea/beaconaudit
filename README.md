@@ -23,6 +23,8 @@ An accessibility monitoring dashboard that tracks website accessibility scores o
 | Templating | Twig 3.x |
 | HTTP | Symfony HttpFoundation + Routing |
 | Styling | Tailwind CSS 4 |
+| Interactivity | Alpine.js |
+| Charts | Chart.js |
 | API | Google PageSpeed Insights v5 |
 | Testing | PHPUnit 11.x |
 | Static Analysis | PHPStan Level 9 + strict-rules |

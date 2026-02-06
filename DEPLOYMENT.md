@@ -167,9 +167,9 @@ server {
 
     # Static files
     location ~* \.(css|js|png|jpg|jpeg|gif|ico|svg|woff|woff2|ttf|eot)$ {
-        expires 30d;
+        expires 7d;
         access_log off;
-        add_header Cache-Control "public, immutable";
+        add_header Cache-Control "public, no-cache";
     }
 
     # Route everything through index.php
@@ -273,13 +273,14 @@ When you push new changes:
 ```bash
 cd /var/www/beaconaudit
 git pull origin main
+rm -rf storage/cache/twig/*
 composer install --no-dev --optimize-autoloader
 npm ci
 npm run build
-sudo systemctl reload php8.4-fpm
+sudo systemctl restart php8.4-fpm
 ```
 
-Migrations run automatically on the next request (via `MigrationRunner` in `index.php`).
+The `rm -rf storage/cache/twig/*` step clears the Twig template cache, which is required when templates change — otherwise the server will continue rendering stale cached templates with old HTML/class names. Migrations run automatically on the next request (via `MigrationRunner` in `index.php`).
 
 ## Troubleshooting
 
@@ -290,6 +291,7 @@ Migrations run automatically on the next request (via `MigrationRunner` in `inde
 | Blank page | Check `storage/logs/` and `/var/log/nginx/error.log` |
 | Cron not running | `grep CRON /var/log/syslog` and check `storage/logs/cron.log` |
 | CSS missing | Did you run `npm run build`? Check `public/css/app.css` exists |
+| Styles broken after deploy | Clear Twig cache: `rm -rf storage/cache/twig/*` and restart PHP-FPM |
 | Old PHP still active | Verify with `php -v` and check Nginx is pointing to the `php8.4-fpm.sock` |
 
 ## Server Maintenance
