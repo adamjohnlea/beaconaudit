@@ -231,10 +231,11 @@ crontab -l
 
 ## 13. SQLite Backups
 
-SQLite is a single file, so backups are straightforward. Add a daily backup cron:
+SQLite is a single file, so backups are straightforward. Add a daily backup cron with a cleanup that keeps only the last 7 days:
 
 ```cron
 0 2 * * * cp /var/www/beaconaudit/storage/database.sqlite /var/www/beaconaudit/storage/database-backup-$(date +\%Y\%m\%d).sqlite
+0 3 * * * find /var/www/beaconaudit/storage/ -name "database-backup-*.sqlite" -mtime +7 -delete
 ```
 
 For offsite backups, consider syncing to a DigitalOcean Space or S3 bucket:
@@ -242,6 +243,28 @@ For offsite backups, consider syncing to a DigitalOcean Space or S3 bucket:
 ```cron
 0 3 * * * /usr/local/bin/aws s3 cp /var/www/beaconaudit/storage/database.sqlite s3://your-bucket/backups/database-$(date +\%Y\%m\%d).sqlite
 ```
+
+## 14. Log Rotation
+
+The cron log will grow over time. Set up logrotate to manage it automatically:
+
+```bash
+sudo nano /etc/logrotate.d/beaconaudit
+```
+
+Paste the following:
+
+```
+/var/www/beaconaudit/storage/logs/cron.log {
+    weekly
+    rotate 4
+    compress
+    missingok
+    notifempty
+}
+```
+
+This rotates the log weekly, keeps 4 weeks of compressed history, and ignores missing or empty files.
 
 ## Deploying Updates
 

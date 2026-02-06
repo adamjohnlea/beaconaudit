@@ -45,11 +45,13 @@ npm ci
 npm run build
 ```
 
-Copy and configure the environment file:
+Create the environment file:
 
 ```bash
-cp .env.example .env   # or create .env manually
+cp .env.example .env
 ```
+
+Edit `.env` with your settings:
 
 ```env
 APP_ENV=local
@@ -59,6 +61,17 @@ PAGESPEED_API_KEY=your-api-key-here
 ```
 
 Get a PageSpeed Insights API key from the [Google Cloud Console](https://console.cloud.google.com/apis/credentials).
+
+### Environment Variables
+
+| Variable | Description | Default |
+|----------|-------------|---------|
+| `APP_ENV` | Environment (`local`, `production`) | `production` |
+| `APP_DEBUG` | Enable debug mode (`true`/`false`) | `false` |
+| `DB_PATH` | Path to SQLite database file | `storage/database.sqlite` |
+| `PAGESPEED_API_KEY` | Google PageSpeed Insights API key | (required) |
+
+> **Note:** The `.env` file is excluded from Git. On a fresh clone (e.g. on a server), you must create it manually — see the [Deployment Guide](DEPLOYMENT.md#8-configure-environment).
 
 Create the database and an admin user:
 
