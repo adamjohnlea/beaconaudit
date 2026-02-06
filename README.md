@@ -132,7 +132,7 @@ For automated monitoring, add to crontab (runs every 15 minutes, the runner deci
 */15 * * * * cd /path/to/beaconaudit && /usr/bin/php cron/run-scheduled-audits.php >> storage/logs/cron.log 2>&1
 ```
 
-The audit engine includes automatic retry with exponential backoff (up to 3 retries) for failed API calls, and generates comparisons between consecutive audits to track score changes.
+URLs that have never been audited are considered immediately due, so newly added or imported URLs will be picked up on the next cron run. The audit engine includes automatic retry with exponential backoff (up to 3 retries) for failed API calls, and generates comparisons between consecutive audits to track score changes.
 
 ## Bulk Import
 
@@ -157,6 +157,7 @@ https://other.com,,
 - If `frequency` is empty or missing, it uses the frequency selected on the form
 - Duplicate URLs (already in the database or within the same batch) are skipped
 - Invalid URLs are reported with line numbers and error messages
+- Newly imported URLs are considered immediately due and will be picked up by the next scheduled cron run (within 15 minutes)
 
 ## CLI Tools
 
