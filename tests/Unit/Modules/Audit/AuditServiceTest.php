@@ -5,9 +5,13 @@ declare(strict_types=1);
 namespace Tests\Unit\Modules\Audit;
 
 use App\Modules\Audit\Application\Services\AuditService;
+use App\Modules\Audit\Application\Services\ComparisonService;
 use App\Modules\Audit\Domain\Models\Audit;
+use App\Modules\Audit\Domain\Models\AuditComparison;
+use App\Modules\Audit\Domain\Repositories\AuditComparisonRepositoryInterface;
 use App\Modules\Audit\Domain\Repositories\AuditRepositoryInterface;
 use App\Modules\Audit\Domain\Repositories\IssueRepositoryInterface;
+use App\Modules\Audit\Domain\ValueObjects\AccessibilityScore;
 use App\Modules\Audit\Domain\ValueObjects\AuditStatus;
 use App\Modules\Audit\Infrastructure\Api\ApiException;
 use App\Modules\Audit\Infrastructure\Api\ApiResponse;
@@ -29,6 +33,7 @@ final class AuditServiceTest extends TestCase
     private AuditRepositoryInterface&MockObject $auditRepository;
     private IssueRepositoryInterface&MockObject $issueRepository;
     private PageSpeedClientInterface&MockObject $pageSpeedClient;
+    private AuditComparisonRepositoryInterface&MockObject $comparisonRepository;
     private AuditService $service;
 
     protected function setUp(): void
@@ -38,6 +43,7 @@ final class AuditServiceTest extends TestCase
         $this->auditRepository = $this->createMock(AuditRepositoryInterface::class);
         $this->issueRepository = $this->createMock(IssueRepositoryInterface::class);
         $this->pageSpeedClient = $this->createMock(PageSpeedClientInterface::class);
+        $this->comparisonRepository = $this->createMock(AuditComparisonRepositoryInterface::class);
 
         $this->service = new AuditService(
             $this->urlRepository,
@@ -45,6 +51,8 @@ final class AuditServiceTest extends TestCase
             $this->issueRepository,
             $this->pageSpeedClient,
             new RetryStrategy(maxRetries: 3, baseDelayMs: 0),
+            new ComparisonService(),
+            $this->comparisonRepository,
         );
     }
 
@@ -252,6 +260,93 @@ final class AuditServiceTest extends TestCase
         $this->service->runAudit(1);
 
         $this->assertNotNull($url->getLastAuditedAt());
+    }
+
+    public function test_run_audit_creates_comparison_when_previous_audit_exists(): void
+    {
+        $url = $this->makeUrl(1);
+        $this->urlRepository->method('findById')->with(1)->willReturn($url);
+        $this->urlRepository->method('update')->willReturnArgument(0);
+
+        $apiResponse = $this->makeApiResponse(85);
+        $this->pageSpeedClient->method('runAudit')->willReturn($apiResponse);
+
+        $previousAudit = new Audit(
+            id: 5,
+            urlId: 1,
+            score: new AccessibilityScore(70),
+            status: AuditStatus::COMPLETED,
+            auditDate: new DateTimeImmutable('-1 week'),
+            rawResponse: null,
+            errorMessage: null,
+            retryCount: 0,
+            createdAt: new DateTimeImmutable('-1 week'),
+        );
+
+        $this->auditRepository
+            ->method('save')
+            ->willReturnCallback(static function (Audit $audit): Audit {
+                $audit->setId(10);
+                return $audit;
+            });
+
+        $this->auditRepository
+            ->method('update')
+            ->willReturnCallback(static function (Audit $audit): Audit {
+                return $audit;
+            });
+
+        $this->auditRepository
+            ->method('findLatestByUrlId')
+            ->with(1)
+            ->willReturn($previousAudit);
+
+        $this->issueRepository->method('saveMany')->willReturnArgument(0);
+
+        $this->comparisonRepository
+            ->expects($this->once())
+            ->method('save')
+            ->willReturnCallback(static function (AuditComparison $comparison): AuditComparison {
+                $comparison->setId(1);
+                return $comparison;
+            });
+
+        $this->service->runAudit(1);
+    }
+
+    public function test_run_audit_skips_comparison_when_no_previous_audit(): void
+    {
+        $url = $this->makeUrl(1);
+        $this->urlRepository->method('findById')->with(1)->willReturn($url);
+        $this->urlRepository->method('update')->willReturnArgument(0);
+
+        $apiResponse = $this->makeApiResponse(85);
+        $this->pageSpeedClient->method('runAudit')->willReturn($apiResponse);
+
+        $this->auditRepository
+            ->method('save')
+            ->willReturnCallback(static function (Audit $audit): Audit {
+                $audit->setId(1);
+                return $audit;
+            });
+
+        $this->auditRepository
+            ->method('update')
+            ->willReturnCallback(static function (Audit $audit): Audit {
+                return $audit;
+            });
+
+        $this->auditRepository
+            ->method('findLatestByUrlId')
+            ->willReturn(null);
+
+        $this->issueRepository->method('saveMany')->willReturnArgument(0);
+
+        $this->comparisonRepository
+            ->expects($this->never())
+            ->method('save');
+
+        $this->service->runAudit(1);
     }
 
     private function makeUrl(int $id): Url

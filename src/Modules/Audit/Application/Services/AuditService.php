@@ -6,6 +6,7 @@ namespace App\Modules\Audit\Application\Services;
 
 use App\Modules\Audit\Domain\Models\Audit;
 use App\Modules\Audit\Domain\Models\Issue;
+use App\Modules\Audit\Domain\Repositories\AuditComparisonRepositoryInterface;
 use App\Modules\Audit\Domain\Repositories\AuditRepositoryInterface;
 use App\Modules\Audit\Domain\Repositories\IssueRepositoryInterface;
 use App\Modules\Audit\Domain\ValueObjects\AccessibilityScore;
@@ -29,6 +30,8 @@ final readonly class AuditService implements AuditServiceInterface
         private IssueRepositoryInterface $issueRepository,
         private PageSpeedClientInterface $pageSpeedClient,
         private RetryStrategy $retryStrategy,
+        private ComparisonService $comparisonService,
+        private AuditComparisonRepositoryInterface $comparisonRepository,
     ) {
     }
 
@@ -65,6 +68,8 @@ final readonly class AuditService implements AuditServiceInterface
 
             $this->extractAndSaveIssues($audit, $apiResponse);
 
+            $this->createComparisonIfPreviousExists($audit);
+
             $url->setLastAuditedAt(new DateTimeImmutable());
             $url->setUpdatedAt(new DateTimeImmutable());
             $this->urlRepository->update($url);
@@ -75,6 +80,18 @@ final readonly class AuditService implements AuditServiceInterface
         }
 
         return $audit;
+    }
+
+    private function createComparisonIfPreviousExists(Audit $audit): void
+    {
+        $previousAudit = $this->auditRepository->findLatestByUrlId($audit->getUrlId());
+
+        if ($previousAudit === null || $previousAudit->getId() === $audit->getId()) {
+            return;
+        }
+
+        $comparison = $this->comparisonService->compare($audit, $previousAudit);
+        $this->comparisonRepository->save($comparison);
     }
 
     /**

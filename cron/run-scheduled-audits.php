@@ -7,10 +7,12 @@ $config = require __DIR__ . '/../src/bootstrap.php';
 
 use App\Database\Database;
 use App\Modules\Audit\Application\Services\AuditService;
+use App\Modules\Audit\Application\Services\ComparisonService;
 use App\Modules\Audit\Application\Services\ScheduledAuditRunner;
 use App\Modules\Audit\Infrastructure\Api\CurlHttpClient;
 use App\Modules\Audit\Infrastructure\Api\PageSpeedApiClient;
 use App\Modules\Audit\Infrastructure\RateLimiting\RetryStrategy;
+use App\Modules\Audit\Infrastructure\Repositories\SqliteAuditComparisonRepository;
 use App\Modules\Audit\Infrastructure\Repositories\SqliteAuditRepository;
 use App\Modules\Audit\Infrastructure\Repositories\SqliteIssueRepository;
 use App\Modules\Url\Infrastructure\Repositories\SqliteUrlRepository;
@@ -23,6 +25,8 @@ $issueRepository = new SqliteIssueRepository($database);
 $httpClient = new CurlHttpClient();
 $pageSpeedClient = new PageSpeedApiClient($httpClient, $config['pagespeed']['api_key']);
 $retryStrategy = new RetryStrategy(maxRetries: $config['pagespeed']['max_retries']);
+$comparisonService = new ComparisonService();
+$comparisonRepository = new SqliteAuditComparisonRepository($database);
 
 $auditService = new AuditService(
     $urlRepository,
@@ -30,6 +34,8 @@ $auditService = new AuditService(
     $issueRepository,
     $pageSpeedClient,
     $retryStrategy,
+    $comparisonService,
+    $comparisonRepository,
 );
 
 $runner = new ScheduledAuditRunner($urlRepository, $auditService);
