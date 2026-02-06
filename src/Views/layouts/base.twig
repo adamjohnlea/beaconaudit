@@ -4,38 +4,118 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}Beacon Audit{% endblock %}</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="/css/app.css">
+    <script defer src="/js/alpine.min.js"></script>
+    {% block head %}{% endblock %}
 </head>
-<body class="bg-gray-50 min-h-screen">
-    <nav class="bg-white shadow-sm border-b border-gray-200">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="flex justify-between h-16">
-                <div class="flex items-center">
-                    <a href="/" class="text-xl font-bold text-gray-900">Beacon Audit</a>
-                    <div class="ml-10 flex space-x-8">
-                        <a href="/" class="text-gray-600 hover:text-gray-900 px-3 py-2 text-sm font-medium">Dashboard</a>
-                        {% if currentUser is defined and currentUser is not null and currentUser.admin %}
-                            <a href="/projects" class="text-gray-600 hover:text-gray-900 px-3 py-2 text-sm font-medium">Projects</a>
-                            <a href="/urls" class="text-gray-600 hover:text-gray-900 px-3 py-2 text-sm font-medium">URLs</a>
-                            <a href="/users" class="text-gray-600 hover:text-gray-900 px-3 py-2 text-sm font-medium">Users</a>
-                        {% endif %}
-                    </div>
-                </div>
-                {% if currentUser is defined and currentUser is not null %}
-                    <div class="flex items-center space-x-4">
-                        <span class="text-sm text-gray-600">{{ currentUser.email.value }}</span>
-                        <form method="POST" action="/logout">
-                            <input type="hidden" name="_csrf_token" value="{{ csrf_token }}">
-                            <button type="submit" class="text-sm text-gray-600 hover:text-gray-900">Logout</button>
-                        </form>
-                    </div>
-                {% endif %}
-            </div>
-        </div>
-    </nav>
+<body class="bg-surface min-h-screen" x-data="{ sidebarOpen: localStorage.getItem('sidebarOpen') !== 'false' }" x-init="$watch('sidebarOpen', val => localStorage.setItem('sidebarOpen', val))">
 
-    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {% block content %}{% endblock %}
+    {# --- Sidebar --- #}
+    <aside
+        class="fixed inset-y-0 left-0 z-30 bg-sidebar flex flex-col sidebar-transition overflow-hidden"
+        :class="sidebarOpen ? 'w-60' : 'w-16'"
+    >
+        {# Logo #}
+        <div class="flex items-center h-14 border-b border-sidebar-border" :class="sidebarOpen ? 'px-5' : 'px-0 justify-center'">
+            <a href="/" class="flex items-center gap-3 min-w-0">
+                <svg class="shrink-0 w-6 h-6 text-sidebar-text-active" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"/><path d="M2 12h20"/></svg>
+                <span class="text-sm font-semibold text-sidebar-text-active whitespace-nowrap" x-show="sidebarOpen" x-cloak x-transition.opacity.duration.150ms>Beacon Audit</span>
+            </a>
+        </div>
+
+        {# Navigation #}
+        <nav class="flex-1 py-4 space-y-1" :class="sidebarOpen ? 'px-3' : 'px-2'">
+            {% set nav_items = [
+                {url: '/', label: 'Dashboard', icon: 'dashboard', always: true},
+                {url: '/projects', label: 'Projects', icon: 'projects', admin: true},
+                {url: '/urls', label: 'URLs', icon: 'urls', admin: true},
+                {url: '/users', label: 'Users', icon: 'users', admin: true}
+            ] %}
+
+            {% for item in nav_items %}
+                {% if item.always is defined or (currentUser is defined and currentUser is not null and currentUser.admin) %}
+                <a href="{{ item.url }}"
+                   class="flex items-center gap-3 rounded-lg text-[13px] font-medium transition-colors duration-150"
+                   :class="sidebarOpen ? 'px-3 py-2' : 'px-0 py-2 justify-center'"
+                   {% set is_active = false %}
+                   {% if item.url == '/' %}
+                       {% set is_active = active_nav is defined and active_nav == 'dashboard' %}
+                   {% elseif item.url == '/projects' %}
+                       {% set is_active = active_nav is defined and active_nav == 'projects' %}
+                   {% elseif item.url == '/urls' %}
+                       {% set is_active = active_nav is defined and active_nav == 'urls' %}
+                   {% elseif item.url == '/users' %}
+                       {% set is_active = active_nav is defined and active_nav == 'users' %}
+                   {% endif %}
+                   style="color: {{ is_active ? 'var(--color-sidebar-text-active)' : 'var(--color-sidebar-text)' }}; background: {{ is_active ? 'var(--color-sidebar-hover)' : 'transparent' }};"
+                   onmouseover="{% if not is_active %}this.style.background='var(--color-sidebar-hover)'{% endif %}"
+                   onmouseout="{% if not is_active %}this.style.background='transparent'{% endif %}"
+                >
+                    {% if item.icon == 'dashboard' %}
+                        <svg class="shrink-0 w-[18px] h-[18px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+                    {% elseif item.icon == 'projects' %}
+                        <svg class="shrink-0 w-[18px] h-[18px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2Z"/></svg>
+                    {% elseif item.icon == 'urls' %}
+                        <svg class="shrink-0 w-[18px] h-[18px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+                    {% elseif item.icon == 'users' %}
+                        <svg class="shrink-0 w-[18px] h-[18px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                    {% endif %}
+                    <span class="whitespace-nowrap" x-show="sidebarOpen" x-cloak x-transition.opacity.duration.150ms>{{ item.label }}</span>
+                </a>
+                {% endif %}
+            {% endfor %}
+        </nav>
+
+        {# Footer: user + collapse #}
+        <div class="border-t border-sidebar-border" :class="sidebarOpen ? 'p-3' : 'p-2'">
+            {% if currentUser is defined and currentUser is not null %}
+            <div class="flex items-center gap-3 mb-2" :class="sidebarOpen ? 'px-2' : 'justify-center'">
+                <div class="shrink-0 w-7 h-7 rounded-full bg-sidebar-hover flex items-center justify-center">
+                    <span class="text-xs font-medium text-sidebar-text-active">{{ currentUser.email.value|first|upper }}</span>
+                </div>
+                <div class="min-w-0" x-show="sidebarOpen" x-cloak x-transition.opacity.duration.150ms>
+                    <div class="text-xs font-medium text-sidebar-text-active truncate">{{ currentUser.email.value }}</div>
+                    <form method="POST" action="/logout" class="inline">
+                        <input type="hidden" name="_csrf_token" value="{{ csrf_token }}">
+                        <button type="submit" class="text-[11px] text-sidebar-text hover:text-sidebar-text-active transition-colors">Sign out</button>
+                    </form>
+                </div>
+            </div>
+            {% endif %}
+
+            <button
+                @click="sidebarOpen = !sidebarOpen"
+                class="flex items-center gap-3 w-full rounded-lg text-[13px] font-medium text-sidebar-text hover:text-sidebar-text-active hover:bg-sidebar-hover transition-colors duration-150"
+                :class="sidebarOpen ? 'px-3 py-2' : 'px-0 py-2 justify-center'"
+            >
+                <svg class="shrink-0 w-[18px] h-[18px] transition-transform duration-200" :class="sidebarOpen ? '' : 'rotate-180'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 3v18"/><path d="m14 9-3 3 3 3"/></svg>
+                <span class="whitespace-nowrap" x-show="sidebarOpen" x-cloak x-transition.opacity.duration.150ms>Collapse</span>
+            </button>
+        </div>
+    </aside>
+
+    {# --- Main Content --- #}
+    <main
+        class="min-h-screen content-transition"
+        :class="sidebarOpen ? 'ml-60' : 'ml-16'"
+    >
+        {# Top bar #}
+        <header class="h-14 border-b border-border flex items-center justify-between px-8">
+            <div>
+                {% block page_header %}{% endblock %}
+            </div>
+            <div class="flex items-center gap-4">
+                {% block page_actions %}{% endblock %}
+            </div>
+        </header>
+
+        {# Page content #}
+        <div class="px-8 py-6 fade-in">
+            {% block content %}{% endblock %}
+        </div>
     </main>
 </body>
 </html>

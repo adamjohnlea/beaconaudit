@@ -2,54 +2,62 @@
 
 {% block title %}Import Results - Beacon Audit{% endblock %}
 
+{% block page_header %}
+    <div class="flex items-center gap-2 text-sm">
+        <a href="/urls" class="text-text-muted hover:text-text-secondary transition-colors">URLs</a>
+        <span class="text-text-muted">/</span>
+        <span class="text-text-primary font-medium">Import Results</span>
+    </div>
+{% endblock %}
+
 {% block content %}
-    <div class="max-w-3xl">
-        <h1 class="text-2xl font-bold text-gray-900 mb-6">Import Results</h1>
-
-        <div class="grid grid-cols-3 gap-4 mb-6">
-            <div class="bg-green-50 border border-green-200 rounded-lg p-4 text-center">
-                <div class="text-3xl font-bold text-green-700">{{ result.importedCount }}</div>
-                <div class="text-sm text-green-600 mt-1">Imported</div>
-            </div>
-            <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-4 text-center">
-                <div class="text-3xl font-bold text-yellow-700">{{ result.skippedCount }}</div>
-                <div class="text-sm text-yellow-600 mt-1">Skipped (duplicates)</div>
-            </div>
-            <div class="bg-red-50 border border-red-200 rounded-lg p-4 text-center">
-                <div class="text-3xl font-bold text-red-700">{{ result.errors|length }}</div>
-                <div class="text-sm text-red-600 mt-1">Errors</div>
-            </div>
+<div class="max-w-2xl">
+    <div class="grid grid-cols-3 gap-4 mb-8">
+        <div class="bg-success-bg border border-green-200 rounded-xl p-5 text-center">
+            <div class="text-2xl font-semibold text-score-excellent">{{ result.importedCount }}</div>
+            <div class="text-xs text-score-excellent mt-1">Imported</div>
         </div>
+        <div class="bg-warning-bg border border-yellow-200 rounded-xl p-5 text-center">
+            <div class="text-2xl font-semibold text-score-good">{{ result.skippedCount }}</div>
+            <div class="text-xs text-score-good mt-1">Skipped (duplicates)</div>
+        </div>
+        <div class="bg-error-bg border border-red-200 rounded-xl p-5 text-center">
+            <div class="text-2xl font-semibold text-score-poor">{{ result.errors|length }}</div>
+            <div class="text-xs text-score-poor mt-1">Errors</div>
+        </div>
+    </div>
 
-        {% if result.hasErrors %}
-            <div class="bg-white shadow rounded-lg overflow-hidden mb-6">
-                <div class="px-6 py-3 bg-red-50 border-b border-red-200">
-                    <h2 class="text-sm font-medium text-red-800">Errors</h2>
-                </div>
-                <table class="min-w-full divide-y divide-gray-200">
-                    <thead class="bg-gray-50">
-                        <tr>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Line</th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">URL</th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Error</th>
+    {% if result.hasErrors %}
+        <div class="bg-surface-raised border border-border rounded-xl mb-8">
+            <div class="px-5 py-3 bg-error-bg border-b border-red-200 rounded-t-xl">
+                <h2 class="text-sm font-medium text-badge-poor-text">Errors</h2>
+            </div>
+            <div class="overflow-x-auto">
+                <table class="w-full">
+                    <thead>
+                        <tr class="border-b border-border-subtle">
+                            <th class="px-5 py-3 text-left text-xs font-medium text-text-muted uppercase tracking-wider">Line</th>
+                            <th class="px-5 py-3 text-left text-xs font-medium text-text-muted uppercase tracking-wider">URL</th>
+                            <th class="px-5 py-3 text-left text-xs font-medium text-text-muted uppercase tracking-wider">Error</th>
                         </tr>
                     </thead>
-                    <tbody class="bg-white divide-y divide-gray-200">
+                    <tbody>
                         {% for error in result.errors %}
-                            <tr>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ error.line }}</td>
-                                <td class="px-6 py-4 text-sm text-gray-900 break-all">{{ error.url }}</td>
-                                <td class="px-6 py-4 text-sm text-red-600">{{ error.error }}</td>
-                            </tr>
+                        <tr class="border-b border-border-subtle last:border-0">
+                            <td class="px-5 py-3.5 text-sm text-text-secondary">{{ error.line }}</td>
+                            <td class="px-5 py-3.5 text-sm text-text-primary break-all">{{ error.url }}</td>
+                            <td class="px-5 py-3.5 text-sm text-danger">{{ error.error }}</td>
+                        </tr>
                         {% endfor %}
                     </tbody>
                 </table>
             </div>
-        {% endif %}
-
-        <div class="flex space-x-3">
-            <a href="/urls/bulk-import" class="px-4 py-2 bg-indigo-600 text-white rounded-lg text-sm font-medium hover:bg-indigo-700">Import More</a>
-            <a href="/urls" class="px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50">View All URLs</a>
         </div>
+    {% endif %}
+
+    <div class="flex gap-3">
+        <a href="/urls/bulk-import" class="inline-flex items-center h-9 px-4 bg-accent text-white rounded-lg text-sm font-medium hover:bg-accent-hover transition-colors duration-150">Import More</a>
+        <a href="/urls" class="inline-flex items-center h-9 px-4 border border-border rounded-lg text-sm font-medium text-text-secondary hover:text-text-primary hover:border-text-muted transition-colors duration-150">View All URLs</a>
     </div>
+</div>
 {% endblock %}

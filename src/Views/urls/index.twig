@@ -2,55 +2,62 @@
 
 {% block title %}URLs - Beacon Audit{% endblock %}
 
-{% block content %}
-    <div class="flex justify-between items-center mb-6">
-        <h1 class="text-2xl font-bold text-gray-900">Monitored URLs</h1>
-        <div class="flex space-x-3">
-            <a href="/urls/bulk-import" class="bg-white border border-indigo-600 text-indigo-600 px-4 py-2 rounded-lg text-sm font-medium hover:bg-indigo-50">Bulk Import</a>
-            <a href="/urls/create" class="bg-indigo-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-indigo-700">Add URL</a>
-        </div>
-    </div>
+{% block page_header %}
+    <h1 class="text-lg font-semibold text-text-primary tracking-tight">Monitored URLs</h1>
+{% endblock %}
 
-    {% if urls is empty %}
-        <div class="bg-white rounded-lg shadow p-6 text-center text-gray-500">
-            No URLs being monitored yet. Add one to get started.
-        </div>
-    {% else %}
-        <div class="bg-white shadow rounded-lg overflow-hidden">
-            <table class="min-w-full divide-y divide-gray-200">
-                <thead class="bg-gray-50">
-                    <tr>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">URL</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Frequency</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                        <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+{% block page_actions %}
+    <div class="flex items-center gap-2">
+        <a href="/urls/bulk-import" class="inline-flex items-center h-8 px-3 border border-border text-[13px] font-medium text-text-secondary rounded-lg hover:text-text-primary hover:border-text-muted transition-colors duration-150">Bulk Import</a>
+        <a href="/urls/create" class="inline-flex items-center h-8 px-3 bg-accent text-white text-[13px] font-medium rounded-lg hover:bg-accent-hover transition-colors duration-150">Add URL</a>
+    </div>
+{% endblock %}
+
+{% block content %}
+{% if urls is empty %}
+    <div class="border border-border rounded-xl p-12 text-center">
+        <div class="text-sm text-text-muted">No URLs being monitored yet. Add one to get started.</div>
+    </div>
+{% else %}
+    <div class="bg-surface-raised border border-border rounded-xl">
+        <div class="overflow-x-auto">
+            <table class="w-full">
+                <thead>
+                    <tr class="border-b border-border-subtle">
+                        <th class="px-5 py-3 text-left text-xs font-medium text-text-muted uppercase tracking-wider">Name</th>
+                        <th class="px-5 py-3 text-left text-xs font-medium text-text-muted uppercase tracking-wider">URL</th>
+                        <th class="px-5 py-3 text-left text-xs font-medium text-text-muted uppercase tracking-wider">Frequency</th>
+                        <th class="px-5 py-3 text-left text-xs font-medium text-text-muted uppercase tracking-wider">Status</th>
+                        <th class="px-5 py-3 text-right text-xs font-medium text-text-muted uppercase tracking-wider">Actions</th>
                     </tr>
                 </thead>
-                <tbody class="bg-white divide-y divide-gray-200">
+                <tbody>
                     {% for url in urls %}
-                        <tr>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{{ url.name }}</td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ url.url.value }}</td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ url.auditFrequency.label }}</td>
-                            <td class="px-6 py-4 whitespace-nowrap">
-                                {% if url.enabled %}
-                                    <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800">Active</span>
-                                {% else %}
-                                    <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-gray-100 text-gray-800">Disabled</span>
-                                {% endif %}
-                            </td>
-                            <td class="px-6 py-4 whitespace-nowrap text-right text-sm">
-                                <a href="/urls/{{ url.id }}/edit" class="text-indigo-600 hover:text-indigo-900">Edit</a>
-                                <form method="POST" action="/urls/{{ url.id }}/delete" class="inline ml-3" onsubmit="return confirm('Are you sure you want to delete this URL?')">
+                    <tr class="border-b border-border-subtle last:border-0 hover:bg-accent-subtle transition-colors duration-100">
+                        <td class="px-5 py-3.5 text-sm font-medium text-text-primary">{{ url.name }}</td>
+                        <td class="px-5 py-3.5 text-sm text-text-secondary">{{ url.url.value }}</td>
+                        <td class="px-5 py-3.5 text-sm text-text-secondary">{{ url.auditFrequency.label }}</td>
+                        <td class="px-5 py-3.5">
+                            {% if url.enabled %}
+                                <span class="inline-flex items-center px-2 py-0.5 rounded-md text-xs font-medium bg-badge-excellent-bg text-badge-excellent-text">Active</span>
+                            {% else %}
+                                <span class="inline-flex items-center px-2 py-0.5 rounded-md text-xs font-medium bg-accent-subtle text-text-secondary">Disabled</span>
+                            {% endif %}
+                        </td>
+                        <td class="px-5 py-3.5 text-right">
+                            <div class="flex items-center justify-end gap-3">
+                                <a href="/urls/{{ url.id }}/edit" class="text-[13px] font-medium text-text-secondary hover:text-text-primary transition-colors">Edit</a>
+                                <form method="POST" action="/urls/{{ url.id }}/delete" class="inline" onsubmit="return confirm('Are you sure you want to delete this URL?')">
                                     <input type="hidden" name="_csrf_token" value="{{ csrf_token }}">
-                                    <button type="submit" class="text-red-600 hover:text-red-900">Delete</button>
+                                    <button type="submit" class="text-[13px] font-medium text-danger hover:text-danger-hover transition-colors">Delete</button>
                                 </form>
-                            </td>
-                        </tr>
+                            </div>
+                        </td>
+                    </tr>
                     {% endfor %}
                 </tbody>
             </table>
         </div>
-    {% endif %}
+    </div>
+{% endif %}
 {% endblock %}

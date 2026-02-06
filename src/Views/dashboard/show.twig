@@ -2,122 +2,187 @@
 
 {% block title %}{{ url.name ?? url.url.value }} - Beacon Audit{% endblock %}
 
+{% block head %}
+    <script src="/js/chart.min.js"></script>
+{% endblock %}
+
+{% block page_header %}
+    <div class="flex items-center gap-2 text-sm">
+        <a href="/" class="text-text-muted hover:text-text-secondary transition-colors">Dashboard</a>
+        <span class="text-text-muted">/</span>
+        <span class="text-text-primary font-medium truncate max-w-[200px]">{{ url.name ?? url.url.value }}</span>
+    </div>
+{% endblock %}
+
+{% block page_actions %}
+    {% if currentUser is defined and currentUser is not null and currentUser.admin %}
+    <form method="post" action="/dashboard/{{ url.id }}/run-audit" onsubmit="this.querySelector('button').disabled=true;this.querySelector('button').textContent='Running...'">
+        <input type="hidden" name="_csrf_token" value="{{ csrf_token }}">
+        <button type="submit" class="inline-flex items-center h-8 px-3 bg-accent text-white text-[13px] font-medium rounded-lg hover:bg-accent-hover transition-colors duration-150 disabled:opacity-50">
+            Run Audit
+        </button>
+    </form>
+    {% endif %}
+{% endblock %}
+
 {% block content %}
+{# URL header #}
 <div class="mb-8">
     <div class="flex items-center justify-between">
         <div>
-            <a href="/" class="text-sm text-indigo-600 hover:text-indigo-800">&larr; Back to Dashboard</a>
-            <h1 class="mt-2 text-2xl font-bold text-gray-900">{{ url.name ?? url.url.value }}</h1>
-            <p class="mt-1 text-sm text-gray-500">{{ url.url.value }}</p>
+            <h2 class="text-xl font-semibold text-text-primary tracking-tight">{{ url.name ?? url.url.value }}</h2>
+            <p class="mt-0.5 text-sm text-text-muted">{{ url.url.value }}</p>
         </div>
-        <div class="flex items-center gap-6">
-            <div class="text-right">
-                <div class="text-sm text-gray-500">Current Score</div>
-                {% if latestScore is not null %}
-                    <div class="text-4xl font-bold {% if latestScore >= 90 %}text-green-600{% elseif latestScore >= 70 %}text-yellow-600{% else %}text-red-600{% endif %}">
-                        {{ latestScore }}
-                    </div>
-                {% else %}
-                    <div class="text-4xl font-bold text-gray-400">--</div>
-                {% endif %}
-            </div>
-            {% if currentUser is defined and currentUser is not null and currentUser.admin %}
-            <form method="post" action="/dashboard/{{ url.id }}/run-audit" onsubmit="this.querySelector('button').disabled=true;this.querySelector('button').textContent='Running...'">
-                <input type="hidden" name="_csrf_token" value="{{ csrf_token }}">
-                <button type="submit" class="inline-flex items-center px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-md hover:bg-indigo-700 disabled:opacity-50">
-                    Run Audit Now
-                </button>
-            </form>
+        <div class="text-right">
+            <div class="text-xs text-text-muted uppercase tracking-wider">Current Score</div>
+            {% if latestScore is not null %}
+                <div class="text-4xl font-semibold tracking-tight {% if latestScore >= 90 %}text-score-excellent{% elseif latestScore >= 70 %}text-score-good{% else %}text-score-poor{% endif %}">
+                    {{ latestScore }}
+                </div>
+            {% else %}
+                <div class="text-4xl font-semibold text-text-muted">&mdash;</div>
             {% endif %}
         </div>
     </div>
 </div>
 
-<div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-    <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-        <div class="text-sm font-medium text-gray-500">Average Score</div>
-        <div class="mt-2 text-3xl font-bold text-gray-900">{{ averageScore }}</div>
+{# Stats #}
+<div class="grid grid-cols-3 gap-4 mb-8">
+    <div class="bg-surface-raised border border-border rounded-xl p-5">
+        <div class="text-xs font-medium text-text-muted uppercase tracking-wider">Average Score</div>
+        <div class="mt-2 text-2xl font-semibold text-text-primary">{{ averageScore }}</div>
     </div>
-
-    <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-        <div class="text-sm font-medium text-gray-500">Trend</div>
-        <div class="mt-2 text-3xl font-bold
-            {% if trend.value == 'improving' %}text-green-600
-            {% elseif trend.value == 'degrading' %}text-red-600
-            {% else %}text-gray-600{% endif %}">
+    <div class="bg-surface-raised border border-border rounded-xl p-5">
+        <div class="text-xs font-medium text-text-muted uppercase tracking-wider">Trend</div>
+        <div class="mt-2 text-2xl font-semibold
+            {% if trend.value == 'improving' %}text-score-excellent
+            {% elseif trend.value == 'degrading' %}text-score-poor
+            {% else %}text-text-secondary{% endif %}">
             {% if trend.value == 'improving' %}&uarr;{% elseif trend.value == 'degrading' %}&darr;{% else %}&rarr;{% endif %}
             {{ trend.label }}
         </div>
     </div>
-
-    <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-        <div class="text-sm font-medium text-gray-500">Total Audits</div>
-        <div class="mt-2 text-3xl font-bold text-gray-900">{{ audits|length }}</div>
+    <div class="bg-surface-raised border border-border rounded-xl p-5">
+        <div class="text-xs font-medium text-text-muted uppercase tracking-wider">Total Audits</div>
+        <div class="mt-2 text-2xl font-semibold text-text-primary">{{ audits|length }}</div>
     </div>
 </div>
 
+{# Score History Chart #}
 {% if graphData is not empty %}
-<div class="bg-white rounded-lg shadow-sm border border-gray-200 mb-8">
-    <div class="px-6 py-4 border-b border-gray-200">
-        <h2 class="text-lg font-semibold text-gray-900">Score History</h2>
+<div class="bg-surface-raised border border-border rounded-xl mb-8">
+    <div class="px-5 py-4 border-b border-border-subtle">
+        <h2 class="text-sm font-semibold text-text-primary">Score History</h2>
     </div>
-    <div class="p-6">
-        <div class="flex items-end space-x-2" style="height: 200px;">
-            {% for point in graphData %}
-                <div class="flex-1 flex flex-col items-center justify-end">
-                    <div class="text-xs font-medium mb-1
-                        {% if point.score >= 90 %}text-green-600
-                        {% elseif point.score >= 70 %}text-yellow-600
-                        {% else %}text-red-600{% endif %}">
-                        {{ point.score }}
-                    </div>
-                    <div class="w-full rounded-t
-                        {% if point.score >= 90 %}bg-green-500
-                        {% elseif point.score >= 70 %}bg-yellow-500
-                        {% else %}bg-red-500{% endif %}"
-                        style="height: {{ point.score * 2 }}px;">
-                    </div>
-                    <div class="text-xs text-gray-400 mt-1">{{ point.date }}</div>
-                </div>
-            {% endfor %}
-        </div>
+    <div class="p-5">
+        <canvas id="scoreChart" height="200"></canvas>
     </div>
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    var ctx = document.getElementById('scoreChart').getContext('2d');
+    var data = {{ graphData|json_encode|raw }};
+    var labels = data.map(function(p) { return p.date; });
+    var scores = data.map(function(p) { return p.score; });
+
+    new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: labels,
+            datasets: [{
+                data: scores,
+                borderColor: '#78716c',
+                backgroundColor: 'rgba(120, 113, 108, 0.08)',
+                borderWidth: 2,
+                pointBackgroundColor: function(context) {
+                    var v = context.raw;
+                    if (v >= 90) return '#16a34a';
+                    if (v >= 70) return '#ca8a04';
+                    return '#dc2626';
+                },
+                pointBorderColor: '#fff',
+                pointBorderWidth: 2,
+                pointRadius: 4,
+                pointHoverRadius: 6,
+                fill: true,
+                tension: 0.3
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { display: false },
+                tooltip: {
+                    backgroundColor: '#1c1917',
+                    titleFont: { family: 'Inter', size: 12 },
+                    bodyFont: { family: 'Inter', size: 13, weight: '600' },
+                    padding: 10,
+                    cornerRadius: 8,
+                    displayColors: false
+                }
+            },
+            scales: {
+                y: {
+                    min: 0,
+                    max: 100,
+                    ticks: {
+                        font: { family: 'Inter', size: 11 },
+                        color: '#a8a29e',
+                        stepSize: 25
+                    },
+                    grid: { color: '#f0eeea' },
+                    border: { display: false }
+                },
+                x: {
+                    ticks: {
+                        font: { family: 'Inter', size: 11 },
+                        color: '#a8a29e',
+                        maxRotation: 0
+                    },
+                    grid: { display: false },
+                    border: { display: false }
+                }
+            }
+        }
+    });
+});
+</script>
 {% endif %}
 
+{# Accessibility Issues #}
 {% if issues is defined and issues is not empty %}
-<div class="bg-white rounded-lg shadow-sm border border-gray-200 mb-8">
-    <div class="px-6 py-4 border-b border-gray-200">
-        <div class="flex items-center justify-between">
-            <h2 class="text-lg font-semibold text-gray-900">Accessibility Issues</h2>
-            <span class="text-sm text-gray-500">{{ issues|length }} issue{{ issues|length != 1 ? 's' : '' }} found in latest audit</span>
-        </div>
+<div class="bg-surface-raised border border-border rounded-xl mb-8">
+    <div class="px-5 py-4 border-b border-border-subtle flex items-center justify-between">
+        <h2 class="text-sm font-semibold text-text-primary">Accessibility Issues</h2>
+        <span class="text-xs text-text-muted">{{ issues|length }} issue{{ issues|length != 1 ? 's' : '' }}</span>
     </div>
     <div class="overflow-x-auto">
-        <table class="min-w-full divide-y divide-gray-200">
-            <thead class="bg-gray-50">
-                <tr>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Severity</th>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Category</th>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Description</th>
+        <table class="w-full">
+            <thead>
+                <tr class="border-b border-border-subtle">
+                    <th class="px-5 py-3 text-left text-xs font-medium text-text-muted uppercase tracking-wider">Severity</th>
+                    <th class="px-5 py-3 text-left text-xs font-medium text-text-muted uppercase tracking-wider">Category</th>
+                    <th class="px-5 py-3 text-left text-xs font-medium text-text-muted uppercase tracking-wider">Description</th>
                 </tr>
             </thead>
-            <tbody class="bg-white divide-y divide-gray-200">
+            <tbody>
                 {% for issue in issues %}
-                <tr>
-                    <td class="px-6 py-4 whitespace-nowrap">
-                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium
-                            {% if issue.severity.value == 'critical' %}bg-red-100 text-red-800
-                            {% elseif issue.severity.value == 'serious' %}bg-orange-100 text-orange-800
-                            {% elseif issue.severity.value == 'moderate' %}bg-yellow-100 text-yellow-800
-                            {% else %}bg-blue-100 text-blue-800{% endif %}">
+                <tr class="border-b border-border-subtle last:border-0">
+                    <td class="px-5 py-3.5">
+                        <span class="inline-flex items-center px-2 py-0.5 rounded-md text-xs font-medium
+                            {% if issue.severity.value == 'critical' %}bg-badge-poor-bg text-badge-poor-text
+                            {% elseif issue.severity.value == 'serious' %}bg-badge-warn-bg text-badge-warn-text
+                            {% elseif issue.severity.value == 'moderate' %}bg-badge-good-bg text-badge-good-text
+                            {% else %}bg-blue-50 text-blue-700{% endif %}">
                             {{ issue.severity.label }}
                         </span>
                     </td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                    <td class="px-5 py-3.5 text-sm text-text-secondary whitespace-nowrap">
                         {{ issue.category.label }}
                     </td>
-                    <td class="px-6 py-4 text-sm text-gray-900">
+                    <td class="px-5 py-3.5 text-sm text-text-primary">
                         {{ issue.description }}
                     </td>
                 </tr>
@@ -128,47 +193,46 @@
 </div>
 {% endif %}
 
-<div class="bg-white rounded-lg shadow-sm border border-gray-200">
-    <div class="px-6 py-4 border-b border-gray-200">
-        <div class="flex items-center justify-between">
-            <h2 class="text-lg font-semibold text-gray-900">Audit History</h2>
-            <a href="/dashboard/{{ url.id }}/export" class="inline-flex items-center px-3 py-1.5 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">Export CSV</a>
-        </div>
+{# Audit History #}
+<div class="bg-surface-raised border border-border rounded-xl">
+    <div class="px-5 py-4 border-b border-border-subtle flex items-center justify-between">
+        <h2 class="text-sm font-semibold text-text-primary">Audit History</h2>
+        <a href="/dashboard/{{ url.id }}/export" class="text-[13px] font-medium text-text-secondary hover:text-text-primary transition-colors">Export CSV</a>
     </div>
 
     {% if audits is empty %}
-        <div class="p-6 text-center text-gray-500">
-            <p>No audits have been run yet.</p>
+        <div class="p-10 text-center text-sm text-text-muted">
+            No audits have been run yet.
         </div>
     {% else %}
         <div class="overflow-x-auto">
-            <table class="min-w-full divide-y divide-gray-200">
-                <thead class="bg-gray-50">
-                    <tr>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Score</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+            <table class="w-full">
+                <thead>
+                    <tr class="border-b border-border-subtle">
+                        <th class="px-5 py-3 text-left text-xs font-medium text-text-muted uppercase tracking-wider">Date</th>
+                        <th class="px-5 py-3 text-left text-xs font-medium text-text-muted uppercase tracking-wider">Score</th>
+                        <th class="px-5 py-3 text-left text-xs font-medium text-text-muted uppercase tracking-wider">Status</th>
                     </tr>
                 </thead>
-                <tbody class="bg-white divide-y divide-gray-200">
+                <tbody>
                     {% for audit in audits %}
-                    <tr>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                    <tr class="border-b border-border-subtle last:border-0">
+                        <td class="px-5 py-3.5 text-sm text-text-primary">
                             {{ audit.auditDate|date('Y-m-d H:i') }}
                         </td>
-                        <td class="px-6 py-4 whitespace-nowrap">
+                        <td class="px-5 py-3.5">
                             <span class="text-sm font-semibold
-                                {% if audit.score.value >= 90 %}text-green-600
-                                {% elseif audit.score.value >= 70 %}text-yellow-600
-                                {% else %}text-red-600{% endif %}">
+                                {% if audit.score.value >= 90 %}text-score-excellent
+                                {% elseif audit.score.value >= 70 %}text-score-good
+                                {% else %}text-score-poor{% endif %}">
                                 {{ audit.score.value }}
                             </span>
                         </td>
-                        <td class="px-6 py-4 whitespace-nowrap">
-                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium
-                                {% if audit.status.value == 'completed' %}bg-green-100 text-green-800
-                                {% elseif audit.status.value == 'failed' %}bg-red-100 text-red-800
-                                {% else %}bg-yellow-100 text-yellow-800{% endif %}">
+                        <td class="px-5 py-3.5">
+                            <span class="inline-flex items-center px-2 py-0.5 rounded-md text-xs font-medium
+                                {% if audit.status.value == 'completed' %}bg-badge-excellent-bg text-badge-excellent-text
+                                {% elseif audit.status.value == 'failed' %}bg-badge-poor-bg text-badge-poor-text
+                                {% else %}bg-badge-good-bg text-badge-good-text{% endif %}">
                                 {{ audit.status.label }}
                             </span>
                         </td>
