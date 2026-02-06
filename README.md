@@ -2,6 +2,8 @@
 
 An accessibility monitoring dashboard that tracks website accessibility scores over time using the Google PageSpeed Insights API. Built with PHP 8.4 and SQLite.
 
+![screenshot.png](screenshot.png)
+
 ## Features
 
 - **Automated Audits** — Schedule daily, weekly, biweekly, or monthly accessibility scans via the PageSpeed Insights API
