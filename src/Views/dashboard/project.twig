@@ -139,11 +139,11 @@
                         </td>
                         <td class="px-5 py-3.5 text-right">
                             <div class="flex items-center justify-end gap-2">
-                                <a href="/dashboard/{{ urlSummary.urlId }}" class="text-[13px] font-medium text-text-secondary hover:text-text-primary transition-colors">View</a>
+                                <a href="/dashboard/{{ urlSummary.urlId }}" class="inline-flex items-center h-7 px-2.5 text-[12px] font-medium rounded-md border border-border text-text-secondary hover:text-text-primary hover:border-text-muted transition-colors duration-150">View</a>
                                 {% if currentUser is defined and currentUser is not null and currentUser.admin %}
                                 <form method="post" action="/dashboard/{{ urlSummary.urlId }}/run-audit" class="inline" onsubmit="this.querySelector('button').disabled=true;this.querySelector('button').textContent='Running...'">
                                     <input type="hidden" name="_csrf_token" value="{{ csrf_token }}">
-                                    <button type="submit" class="text-[13px] font-medium text-text-secondary hover:text-text-primary transition-colors disabled:text-text-muted">Audit</button>
+                                    <button type="submit" class="inline-flex items-center h-7 px-2.5 text-[12px] font-medium rounded-md bg-accent text-white hover:bg-accent-hover transition-colors duration-150 disabled:opacity-50">Audit</button>
                                 </form>
                                 {% endif %}
                             </div>
