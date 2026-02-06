@@ -2,15 +2,27 @@
 
 {% block title %}{{ url.name ?? url.url.value }} - Beacon Audit{% endblock %}
 
-{% block head %}
-    <script src="/js/chart.min.js"></script>
-{% endblock %}
-
 {% block page_header %}
-    <div class="flex items-center gap-2 text-sm">
-        <a href="/" class="text-text-muted hover:text-text-secondary transition-colors">Dashboard</a>
-        <span class="text-text-muted">/</span>
-        <span class="text-text-primary font-medium truncate max-w-[200px]">{{ url.name ?? url.url.value }}</span>
+    <div class="flex items-center gap-3 text-sm">
+        <div class="flex items-center gap-2">
+            <a href="/" class="text-text-muted hover:text-text-secondary transition-colors">Dashboard</a>
+            <span class="text-text-muted">/</span>
+            <span class="text-text-primary font-medium truncate max-w-[200px]">{{ url.name ?? url.url.value }}</span>
+            <a href="{{ url.url.value }}" target="_blank" rel="noopener noreferrer" class="text-xs text-text-muted hover:text-text-secondary underline underline-offset-2 decoration-stone-300 hover:decoration-stone-400 transition-colors ml-1">{{ url.url.value }}</a>
+        </div>
+        <div class="flex items-center gap-2 ml-2">
+            {% if latestScore is not null %}
+                <span class="inline-flex items-center h-5.5 px-2 rounded-md text-[11px] font-medium {% if latestScore >= 90 %}bg-badge-excellent-bg text-badge-excellent-text{% elseif latestScore >= 70 %}bg-badge-good-bg text-badge-good-text{% else %}bg-badge-poor-bg text-badge-poor-text{% endif %}">Score {{ latestScore }}</span>
+            {% endif %}
+            <span class="inline-flex items-center h-5.5 px-2 rounded-md text-[11px] font-medium
+                {% if trend.value == 'improving' %}bg-badge-excellent-bg text-badge-excellent-text
+                {% elseif trend.value == 'degrading' %}bg-badge-poor-bg text-badge-poor-text
+                {% else %}bg-accent-subtle text-text-secondary{% endif %}">
+                {% if trend.value == 'improving' %}&uarr;{% elseif trend.value == 'degrading' %}&darr;{% else %}&rarr;{% endif %}
+                {{ trend.label }}
+            </span>
+            <span class="inline-flex items-center h-5.5 px-2 rounded-md text-[11px] font-medium bg-accent-subtle text-text-secondary">{{ audits|length }} audit{{ audits|length != 1 ? 's' : '' }}</span>
+        </div>
     </div>
 {% endblock %}
 
@@ -26,135 +38,10 @@
 {% endblock %}
 
 {% block content %}
-{# URL header #}
-<div class="mb-8">
-    <div class="flex items-center justify-between">
-        <div>
-            <h2 class="text-xl font-semibold text-text-primary tracking-tight">{{ url.name ?? url.url.value }}</h2>
-            <p class="mt-0.5 text-sm text-text-muted">{{ url.url.value }}</p>
-        </div>
-        <div class="text-right">
-            <div class="text-xs text-text-muted uppercase tracking-wider">Current Score</div>
-            {% if latestScore is not null %}
-                <div class="text-4xl font-semibold tracking-tight {% if latestScore >= 90 %}text-score-excellent{% elseif latestScore >= 70 %}text-score-good{% else %}text-score-poor{% endif %}">
-                    {{ latestScore }}
-                </div>
-            {% else %}
-                <div class="text-4xl font-semibold text-text-muted">&mdash;</div>
-            {% endif %}
-        </div>
-    </div>
-</div>
-
-{# Stats #}
-<div class="grid grid-cols-3 gap-4 mb-8">
-    <div class="bg-surface-raised border border-border rounded-xl p-5">
-        <div class="text-xs font-medium text-text-muted uppercase tracking-wider">Average Score</div>
-        <div class="mt-2 text-2xl font-semibold text-text-primary">{{ averageScore }}</div>
-    </div>
-    <div class="bg-surface-raised border border-border rounded-xl p-5">
-        <div class="text-xs font-medium text-text-muted uppercase tracking-wider">Trend</div>
-        <div class="mt-2 text-2xl font-semibold
-            {% if trend.value == 'improving' %}text-score-excellent
-            {% elseif trend.value == 'degrading' %}text-score-poor
-            {% else %}text-text-secondary{% endif %}">
-            {% if trend.value == 'improving' %}&uarr;{% elseif trend.value == 'degrading' %}&darr;{% else %}&rarr;{% endif %}
-            {{ trend.label }}
-        </div>
-    </div>
-    <div class="bg-surface-raised border border-border rounded-xl p-5">
-        <div class="text-xs font-medium text-text-muted uppercase tracking-wider">Total Audits</div>
-        <div class="mt-2 text-2xl font-semibold text-text-primary">{{ audits|length }}</div>
-    </div>
-</div>
-
-{# Score History Chart #}
-{% if graphData is not empty %}
-<div class="bg-surface-raised border border-border rounded-xl mb-8">
-    <div class="px-5 py-4 border-b border-border-subtle">
-        <h2 class="text-sm font-semibold text-text-primary">Score History</h2>
-    </div>
-    <div class="p-5">
-        <canvas id="scoreChart" height="200"></canvas>
-    </div>
-</div>
-
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-    var ctx = document.getElementById('scoreChart').getContext('2d');
-    var data = {{ graphData|json_encode|raw }};
-    var labels = data.map(function(p) { return p.date; });
-    var scores = data.map(function(p) { return p.score; });
-
-    new Chart(ctx, {
-        type: 'line',
-        data: {
-            labels: labels,
-            datasets: [{
-                data: scores,
-                borderColor: '#78716c',
-                backgroundColor: 'rgba(120, 113, 108, 0.08)',
-                borderWidth: 2,
-                pointBackgroundColor: function(context) {
-                    var v = context.raw;
-                    if (v >= 90) return '#16a34a';
-                    if (v >= 70) return '#ca8a04';
-                    return '#dc2626';
-                },
-                pointBorderColor: '#fff',
-                pointBorderWidth: 2,
-                pointRadius: 4,
-                pointHoverRadius: 6,
-                fill: true,
-                tension: 0.3
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-                legend: { display: false },
-                tooltip: {
-                    backgroundColor: '#1c1917',
-                    titleFont: { family: 'Inter', size: 12 },
-                    bodyFont: { family: 'Inter', size: 13, weight: '600' },
-                    padding: 10,
-                    cornerRadius: 8,
-                    displayColors: false
-                }
-            },
-            scales: {
-                y: {
-                    min: 0,
-                    max: 100,
-                    ticks: {
-                        font: { family: 'Inter', size: 11 },
-                        color: '#a8a29e',
-                        stepSize: 25
-                    },
-                    grid: { color: '#f0eeea' },
-                    border: { display: false }
-                },
-                x: {
-                    ticks: {
-                        font: { family: 'Inter', size: 11 },
-                        color: '#a8a29e',
-                        maxRotation: 0
-                    },
-                    grid: { display: false },
-                    border: { display: false }
-                }
-            }
-        }
-    });
-});
-</script>
-{% endif %}
-
 {# Accessibility Issues #}
 {% if issues is defined and issues is not empty %}
-<div class="bg-surface-raised border border-border rounded-xl mb-8">
-    <div class="px-5 py-4 border-b border-border-subtle flex items-center justify-between">
+<div class="bg-surface-raised border border-border rounded-xl mb-6">
+    <div class="px-5 py-3.5 border-b border-border-subtle flex items-center justify-between">
         <h2 class="text-sm font-semibold text-text-primary">Accessibility Issues</h2>
         <span class="text-xs text-text-muted">{{ issues|length }} issue{{ issues|length != 1 ? 's' : '' }}</span>
     </div>
@@ -162,15 +49,15 @@ document.addEventListener('DOMContentLoaded', function() {
         <table class="w-full">
             <thead>
                 <tr class="border-b border-border-subtle">
-                    <th class="px-5 py-3 text-left text-xs font-medium text-text-muted uppercase tracking-wider">Severity</th>
-                    <th class="px-5 py-3 text-left text-xs font-medium text-text-muted uppercase tracking-wider">Category</th>
-                    <th class="px-5 py-3 text-left text-xs font-medium text-text-muted uppercase tracking-wider">Description</th>
+                    <th class="px-5 py-2.5 text-left text-xs font-medium text-text-muted uppercase tracking-wider">Severity</th>
+                    <th class="px-5 py-2.5 text-left text-xs font-medium text-text-muted uppercase tracking-wider">Category</th>
+                    <th class="px-5 py-2.5 text-left text-xs font-medium text-text-muted uppercase tracking-wider">Description</th>
                 </tr>
             </thead>
             <tbody>
                 {% for issue in issues %}
                 <tr class="border-b border-border-subtle last:border-0">
-                    <td class="px-5 py-3.5">
+                    <td class="px-5 py-2">
                         <span class="inline-flex items-center px-2 py-0.5 rounded-md text-xs font-medium
                             {% if issue.severity.value == 'critical' %}bg-badge-poor-bg text-badge-poor-text
                             {% elseif issue.severity.value == 'serious' %}bg-badge-warn-bg text-badge-warn-text
@@ -179,10 +66,10 @@ document.addEventListener('DOMContentLoaded', function() {
                             {{ issue.severity.label }}
                         </span>
                     </td>
-                    <td class="px-5 py-3.5 text-sm text-text-secondary whitespace-nowrap">
+                    <td class="px-5 py-2 text-sm text-text-secondary whitespace-nowrap">
                         {{ issue.category.label }}
                     </td>
-                    <td class="px-5 py-3.5 text-sm text-text-primary">
+                    <td class="px-5 py-2 text-sm text-text-primary">
                         {{ issue.description }}
                     </td>
                 </tr>
@@ -193,54 +80,59 @@ document.addEventListener('DOMContentLoaded', function() {
 </div>
 {% endif %}
 
-{# Audit History #}
-<div class="bg-surface-raised border border-border rounded-xl">
-    <div class="px-5 py-4 border-b border-border-subtle flex items-center justify-between">
-        <h2 class="text-sm font-semibold text-text-primary">Audit History</h2>
-        <a href="/dashboard/{{ url.id }}/export" class="text-[13px] font-medium text-text-secondary hover:text-text-primary transition-colors">Export CSV</a>
+{# Audit History — collapsible, closed by default #}
+<div class="bg-surface-raised border border-border rounded-xl" x-data="{ open: false }">
+    <div class="px-5 py-3.5 flex items-center justify-between cursor-pointer" @click="open = !open">
+        <div class="flex items-center gap-2">
+            <svg class="w-4 h-4 text-text-muted transition-transform duration-200" :class="open ? 'rotate-90' : ''" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
+            <h2 class="text-sm font-semibold text-text-primary">Audit History</h2>
+        </div>
+        <a href="/dashboard/{{ url.id }}/export" class="text-[13px] font-medium text-text-secondary hover:text-text-primary transition-colors" @click.stop>Export CSV</a>
     </div>
 
-    {% if audits is empty %}
-        <div class="p-10 text-center text-sm text-text-muted">
-            No audits have been run yet.
-        </div>
-    {% else %}
-        <div class="overflow-x-auto">
-            <table class="w-full">
-                <thead>
-                    <tr class="border-b border-border-subtle">
-                        <th class="px-5 py-3 text-left text-xs font-medium text-text-muted uppercase tracking-wider">Date</th>
-                        <th class="px-5 py-3 text-left text-xs font-medium text-text-muted uppercase tracking-wider">Score</th>
-                        <th class="px-5 py-3 text-left text-xs font-medium text-text-muted uppercase tracking-wider">Status</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for audit in audits %}
-                    <tr class="border-b border-border-subtle last:border-0">
-                        <td class="px-5 py-3.5 text-sm text-text-primary">
-                            {{ audit.auditDate|date('Y-m-d H:i') }}
-                        </td>
-                        <td class="px-5 py-3.5">
-                            <span class="text-sm font-semibold
-                                {% if audit.score.value >= 90 %}text-score-excellent
-                                {% elseif audit.score.value >= 70 %}text-score-good
-                                {% else %}text-score-poor{% endif %}">
-                                {{ audit.score.value }}
-                            </span>
-                        </td>
-                        <td class="px-5 py-3.5">
-                            <span class="inline-flex items-center px-2 py-0.5 rounded-md text-xs font-medium
-                                {% if audit.status.value == 'completed' %}bg-badge-excellent-bg text-badge-excellent-text
-                                {% elseif audit.status.value == 'failed' %}bg-badge-poor-bg text-badge-poor-text
-                                {% else %}bg-badge-good-bg text-badge-good-text{% endif %}">
-                                {{ audit.status.label }}
-                            </span>
-                        </td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        </div>
-    {% endif %}
+    <div x-show="open" x-cloak x-transition.opacity.duration.150ms>
+        {% if audits is empty %}
+            <div class="p-10 text-center text-sm text-text-muted border-t border-border-subtle">
+                No audits have been run yet.
+            </div>
+        {% else %}
+            <div class="overflow-x-auto border-t border-border-subtle">
+                <table class="w-full">
+                    <thead>
+                        <tr class="border-b border-border-subtle">
+                            <th class="px-5 py-2.5 text-left text-xs font-medium text-text-muted uppercase tracking-wider">Date</th>
+                            <th class="px-5 py-2.5 text-left text-xs font-medium text-text-muted uppercase tracking-wider">Score</th>
+                            <th class="px-5 py-2.5 text-left text-xs font-medium text-text-muted uppercase tracking-wider">Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for audit in audits %}
+                        <tr class="border-b border-border-subtle last:border-0">
+                            <td class="px-5 py-2 text-sm text-text-primary">
+                                {{ audit.auditDate|date('Y-m-d H:i') }}
+                            </td>
+                            <td class="px-5 py-2">
+                                <span class="text-sm font-semibold
+                                    {% if audit.score.value >= 90 %}text-score-excellent
+                                    {% elseif audit.score.value >= 70 %}text-score-good
+                                    {% else %}text-score-poor{% endif %}">
+                                    {{ audit.score.value }}
+                                </span>
+                            </td>
+                            <td class="px-5 py-2">
+                                <span class="inline-flex items-center px-2 py-0.5 rounded-md text-xs font-medium
+                                    {% if audit.status.value == 'completed' %}bg-badge-excellent-bg text-badge-excellent-text
+                                    {% elseif audit.status.value == 'failed' %}bg-badge-poor-bg text-badge-poor-text
+                                    {% else %}bg-badge-good-bg text-badge-good-text{% endif %}">
+                                    {{ audit.status.label }}
+                                </span>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% endif %}
+    </div>
 </div>
 {% endblock %}
