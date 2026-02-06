@@ -103,21 +103,74 @@ php -S localhost:8000 -t public
 
 ### Manual
 
-Click "Run Audit Now" on any URL's detail page in the dashboard.
+Log in as an admin and click "Run Audit Now" on any URL's detail page in the dashboard.
 
 ### Scheduled (Cron)
 
-The scheduler checks which URLs are due based on their configured frequency:
+The scheduled audit runner checks all enabled URLs and runs audits for any that are due based on their configured frequency:
+
+| Frequency | Interval |
+|-----------|----------|
+| Daily | Every 24 hours |
+| Weekly | Every 7 days |
+| Biweekly | Every 14 days |
+| Monthly | Every 30 days |
+
+Run it manually:
 
 ```bash
 php cron/run-scheduled-audits.php
 ```
 
-Add to crontab for automated monitoring:
+For automated monitoring, add to crontab (runs every 15 minutes, the runner decides which URLs are due):
 
 ```cron
 */15 * * * * cd /path/to/beaconaudit && /usr/bin/php cron/run-scheduled-audits.php >> storage/logs/cron.log 2>&1
 ```
+
+The audit engine includes automatic retry with exponential backoff (up to 3 retries) for failed API calls, and generates comparisons between consecutive audits to track score changes.
+
+## Bulk Import
+
+Admin users can import multiple URLs at once from the **URLs > Bulk Import** page.
+
+### Paste Mode
+
+Enter one URL per line in the textarea. Each URL is used as both the URL and the display name.
+
+### CSV Upload
+
+Upload a CSV file with a header row. The `url` column is required; `name` and `frequency` are optional:
+
+```csv
+url,name,frequency
+https://example.com,Example Site,weekly
+https://test.com,Test Site,daily
+https://other.com,,
+```
+
+- If `name` is empty or missing, it defaults to the URL value
+- If `frequency` is empty or missing, it uses the frequency selected on the form
+- Duplicate URLs (already in the database or within the same batch) are skipped
+- Invalid URLs are reported with line numbers and error messages
+
+## CLI Tools
+
+### Create User
+
+```bash
+php cli/create-user.php --email=user@example.com --password=secret --role=admin
+```
+
+Roles: `admin` (full access) or `viewer` (dashboard read-only). This also runs any pending database migrations.
+
+### Run Scheduled Audits
+
+```bash
+php cron/run-scheduled-audits.php
+```
+
+Checks all enabled URLs and runs audits for any that are due. Outputs a summary of completed audits with scores and statuses.
 
 ## Quality & Testing
 
@@ -159,7 +212,7 @@ Each module follows Domain-Driven Design layers:
 
 ## Deployment
 
-See [DEPLOYMENT.md](DEPLOYMENT.md) for a step-by-step guide to deploying on a DigitalOcean LEMP droplet.
+See [DEPLOYMENT.md](DEPLOYMENT.md) for a step-by-step guide to deploying on a DigitalOcean LEMP droplet, including SSL setup, cron scheduling, SQLite backups, and log rotation.
 
 ## License
 
