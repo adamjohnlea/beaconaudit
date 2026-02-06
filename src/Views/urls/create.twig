@@ -1,0 +1,59 @@
+{% extends "layouts/base.twig" %}
+
+{% block title %}Add URL - Beacon Audit{% endblock %}
+
+{% block content %}
+    <div class="max-w-2xl">
+        <h1 class="text-2xl font-bold text-gray-900 mb-6">Add URL</h1>
+
+        {% if error is defined %}
+            <div class="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-6">
+                {{ error }}
+            </div>
+        {% endif %}
+
+        <form method="POST" action="/urls" class="bg-white shadow rounded-lg p-6 space-y-6">
+            <div>
+                <label for="url" class="block text-sm font-medium text-gray-700 mb-1">URL</label>
+                <input type="url" name="url" id="url" required
+                       value="{{ old.url is defined ? old.url : '' }}"
+                       placeholder="https://example.com"
+                       class="w-full border-gray-300 rounded-lg shadow-sm focus:ring-indigo-500 focus:border-indigo-500">
+            </div>
+
+            <div>
+                <label for="name" class="block text-sm font-medium text-gray-700 mb-1">Name</label>
+                <input type="text" name="name" id="name" required
+                       value="{{ old.name is defined ? old.name : '' }}"
+                       placeholder="My Website"
+                       class="w-full border-gray-300 rounded-lg shadow-sm focus:ring-indigo-500 focus:border-indigo-500">
+            </div>
+
+            <div>
+                <label for="audit_frequency" class="block text-sm font-medium text-gray-700 mb-1">Audit Frequency</label>
+                <select name="audit_frequency" id="audit_frequency"
+                        class="w-full border-gray-300 rounded-lg shadow-sm focus:ring-indigo-500 focus:border-indigo-500">
+                    {% for freq in frequencies %}
+                        <option value="{{ freq.value }}" {{ old.audit_frequency is defined and old.audit_frequency == freq.value ? 'selected' : '' }}>{{ freq.label }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div>
+                <label for="project_id" class="block text-sm font-medium text-gray-700 mb-1">Project (optional)</label>
+                <select name="project_id" id="project_id"
+                        class="w-full border-gray-300 rounded-lg shadow-sm focus:ring-indigo-500 focus:border-indigo-500">
+                    <option value="">No project</option>
+                    {% for project in projects %}
+                        <option value="{{ project.id }}">{{ project.name.value }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="flex justify-end space-x-3">
+                <a href="/urls" class="px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50">Cancel</a>
+                <button type="submit" class="px-4 py-2 bg-indigo-600 text-white rounded-lg text-sm font-medium hover:bg-indigo-700">Add URL</button>
+            </div>
+        </form>
+    </div>
+{% endblock %}
