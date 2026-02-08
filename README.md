@@ -13,6 +13,7 @@ An accessibility monitoring dashboard that tracks website accessibility scores o
 - **Historical Tracking** — View score history, audit-to-audit comparisons, and trend analysis per URL
 - **Issue Tracking** — Detailed accessibility issues logged per audit with descriptions and selectors
 - **PDF Reports** — Downloadable per-project PDF reports with executive summary, score distribution, and full issue breakdown by category
+- **Email Notifications** — Subscribe to projects and receive PDF audit reports by email (via AWS SES) after each audit completes
 - **CSV Export** — Export audit data per URL or as a full summary across all monitored URLs
 - **User Management** — Role-based access (admin/viewer) with session authentication and CSRF protection
 - **Cron Scheduling** — CLI runner that automatically audits URLs when they're due based on their frequency
@@ -29,6 +30,7 @@ An accessibility monitoring dashboard that tracks website accessibility scores o
 | Interactivity | Alpine.js |
 | Charts | Chart.js |
 | PDF | DOMPDF |
+| Email | AWS SES (via aws-sdk-php) |
 | API | Google PageSpeed Insights v5 |
 | Testing | PHPUnit 11.x |
 | Static Analysis | PHPStan Level 9 + strict-rules |
@@ -76,6 +78,10 @@ Get a PageSpeed Insights API key from the [Google Cloud Console](https://console
 | `APP_DEBUG` | Enable debug mode (`true`/`false`) | `false` |
 | `DB_PATH` | Path to SQLite database file | `storage/database.sqlite` |
 | `PAGESPEED_API_KEY` | Google PageSpeed Insights API key | (required) |
+| `AWS_SES_REGION` | AWS SES region | `us-east-1` |
+| `AWS_SES_ACCESS_KEY` | AWS IAM access key for SES | (optional) |
+| `AWS_SES_SECRET_KEY` | AWS IAM secret key for SES | (optional) |
+| `AWS_SES_FROM_ADDRESS` | Verified sender email address | (optional) |
 
 > **Note:** The `.env` file is excluded from Git. On a fresh clone (e.g. on a server), you must create it manually — see the [Deployment Guide](DEPLOYMENT.md#8-configure-environment).
 
@@ -186,7 +192,7 @@ Checks all enabled URLs and runs audits for any that are due. Outputs a summary 
 composer quality
 
 # Individual commands
-composer test           # PHPUnit (298 tests)
+composer test           # PHPUnit (310 tests)
 composer phpstan        # PHPStan level 9
 composer cs-check       # Code style dry-run
 composer cs-fix         # Auto-fix code style
@@ -204,7 +210,7 @@ src/
     Dashboard/     Statistics aggregation
     Reporting/     CSV export, PDF reports
     Auth/          Authentication & user management
-    Notification/  Notification system (scaffolded)
+    Notification/  Email subscriptions & SES notifications
   Shared/          Exceptions, base classes
   Http/            Controllers, router
   Views/           Twig templates
