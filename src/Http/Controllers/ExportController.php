@@ -7,6 +7,9 @@ namespace App\Http\Controllers;
 use App\Modules\Audit\Domain\Repositories\AuditRepositoryInterface;
 use App\Modules\Dashboard\Application\Services\DashboardStatistics;
 use App\Modules\Reporting\Application\Services\CsvExportService;
+use App\Modules\Reporting\Application\Services\PdfReportDataCollector;
+use App\Modules\Reporting\Application\Services\PdfReportService;
+use App\Modules\Url\Domain\Repositories\ProjectRepositoryInterface;
 use App\Modules\Url\Domain\Repositories\UrlRepositoryInterface;
 use Symfony\Component\HttpFoundation\Response;
 
@@ -17,6 +20,9 @@ final readonly class ExportController
         private AuditRepositoryInterface $auditRepository,
         private CsvExportService $csvExportService,
         private DashboardStatistics $dashboardStatistics,
+        private ProjectRepositoryInterface $projectRepository,
+        private PdfReportDataCollector $pdfReportDataCollector,
+        private PdfReportService $pdfReportService,
     ) {
     }
 
@@ -69,6 +75,25 @@ final readonly class ExportController
         return new Response($csv, 200, [
             'Content-Type' => 'text/csv',
             'Content-Disposition' => 'attachment; filename="beacon-audit-summary.csv"',
+        ]);
+    }
+
+    public function exportProjectReport(int $projectId): Response
+    {
+        $project = $this->projectRepository->findById($projectId);
+
+        if ($project === null) {
+            return new Response('Not Found', 404);
+        }
+
+        $reportData = $this->pdfReportDataCollector->collect($project);
+        $pdf = $this->pdfReportService->generate($reportData);
+
+        $filename = 'report-' . preg_replace('/[^a-z0-9]+/', '-', strtolower($project->getName()->getValue())) . '.pdf';
+
+        return new Response($pdf, 200, [
+            'Content-Type' => 'application/pdf',
+            'Content-Disposition' => 'attachment; filename="' . $filename . '"',
         ]);
     }
 }

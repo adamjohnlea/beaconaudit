@@ -6,6 +6,7 @@
         "php": "^8.4",
         "ext-json": "*",
         "ext-pdo": "*",
+        "dompdf/dompdf": "^3.1",
         "symfony/http-foundation": "^7.0",
         "symfony/routing": "^7.0",
         "twig/twig": "^3.8",

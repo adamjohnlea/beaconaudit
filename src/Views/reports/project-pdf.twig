@@ -1,0 +1,387 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: Helvetica, Arial, sans-serif;
+            font-size: 10px;
+            color: #1a1a1a;
+            line-height: 1.4;
+        }
+        .page-break {
+            page-break-before: always;
+        }
+
+        /* Header */
+        .report-header {
+            border-bottom: 2px solid #2563eb;
+            padding-bottom: 12px;
+            margin-bottom: 20px;
+        }
+        .report-header h1 {
+            font-size: 20px;
+            color: #111827;
+            margin-bottom: 4px;
+        }
+        .report-header .subtitle {
+            font-size: 11px;
+            color: #6b7280;
+        }
+
+        /* Summary Cards */
+        .summary-grid {
+            width: 100%;
+            margin-bottom: 20px;
+        }
+        .summary-grid td {
+            width: 25%;
+            padding: 8px 10px;
+            vertical-align: top;
+        }
+        .stat-card {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 6px;
+            padding: 10px 12px;
+        }
+        .stat-label {
+            font-size: 9px;
+            color: #6b7280;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 4px;
+        }
+        .stat-value {
+            font-size: 18px;
+            font-weight: bold;
+            color: #111827;
+        }
+
+        /* Distribution */
+        .distribution-section {
+            margin-bottom: 20px;
+        }
+        .section-title {
+            font-size: 13px;
+            font-weight: bold;
+            color: #111827;
+            margin-bottom: 8px;
+            padding-bottom: 4px;
+            border-bottom: 1px solid #e5e7eb;
+        }
+        .distribution-grid {
+            width: 100%;
+            margin-bottom: 16px;
+        }
+        .distribution-grid td {
+            padding: 4px 8px;
+        }
+        .dist-label {
+            font-size: 9px;
+            color: #6b7280;
+        }
+        .dist-value {
+            font-size: 12px;
+            font-weight: bold;
+        }
+
+        /* Colors for scores */
+        .color-excellent { color: #059669; }
+        .color-good { color: #2563eb; }
+        .color-warn { color: #d97706; }
+        .color-poor { color: #dc2626; }
+
+        /* Badge styles */
+        .badge {
+            display: inline-block;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-size: 8px;
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+        .badge-critical {
+            background: #fef2f2;
+            color: #dc2626;
+        }
+        .badge-serious {
+            background: #fff7ed;
+            color: #ea580c;
+        }
+        .badge-moderate {
+            background: #fffbeb;
+            color: #d97706;
+        }
+        .badge-minor {
+            background: #f0fdf4;
+            color: #16a34a;
+        }
+
+        /* Grade badges */
+        .grade {
+            display: inline-block;
+            padding: 1px 5px;
+            border-radius: 3px;
+            font-size: 9px;
+            font-weight: bold;
+        }
+        .grade-a { background: #d1fae5; color: #059669; }
+        .grade-b { background: #dbeafe; color: #2563eb; }
+        .grade-c { background: #fef3c7; color: #d97706; }
+        .grade-f { background: #fef2f2; color: #dc2626; }
+
+        /* URL Table */
+        table.url-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+        }
+        table.url-table th {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            padding: 6px 8px;
+            text-align: left;
+            font-size: 9px;
+            color: #6b7280;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+        }
+        table.url-table td {
+            border: 1px solid #e2e8f0;
+            padding: 5px 8px;
+            font-size: 9px;
+        }
+        table.url-table tr:nth-child(even) td {
+            background: #f8fafc;
+        }
+
+        /* Issues Section */
+        .category-header {
+            font-size: 12px;
+            font-weight: bold;
+            color: #1e40af;
+            margin-top: 16px;
+            margin-bottom: 8px;
+            padding: 6px 10px;
+            background: #eff6ff;
+            border-left: 3px solid #2563eb;
+        }
+        .issue-card {
+            border: 1px solid #e5e7eb;
+            border-radius: 4px;
+            padding: 8px 10px;
+            margin-bottom: 6px;
+        }
+        .issue-title {
+            font-size: 10px;
+            font-weight: bold;
+            color: #111827;
+            margin-bottom: 2px;
+        }
+        .issue-description {
+            font-size: 9px;
+            color: #4b5563;
+            margin-bottom: 4px;
+        }
+        .issue-meta {
+            font-size: 8px;
+            color: #6b7280;
+        }
+        .issue-meta a {
+            color: #2563eb;
+            text-decoration: none;
+        }
+        .affected-urls {
+            font-size: 8px;
+            color: #6b7280;
+            margin-top: 3px;
+        }
+
+        /* Empty state */
+        .empty-state {
+            text-align: center;
+            padding: 30px;
+            color: #9ca3af;
+            font-size: 11px;
+        }
+
+        /* Footer */
+        .report-footer {
+            margin-top: 20px;
+            padding-top: 8px;
+            border-top: 1px solid #e5e7eb;
+            font-size: 8px;
+            color: #9ca3af;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+
+{# ===== PAGE 1: PROJECT OVERVIEW ===== #}
+<div class="report-header">
+    <h1>{{ report.projectName }}</h1>
+    <div class="subtitle">Accessibility Audit Report &mdash; Generated {{ report.generatedAt }}</div>
+</div>
+
+{# Summary Stats #}
+<table class="summary-grid" cellspacing="0">
+    <tr>
+        <td>
+            <div class="stat-card">
+                <div class="stat-label">Total URLs</div>
+                <div class="stat-value">{{ report.summary.totalUrls }}</div>
+            </div>
+        </td>
+        <td>
+            <div class="stat-card">
+                <div class="stat-label">Average Score</div>
+                <div class="stat-value {% if report.summary.averageScore >= 90 %}color-excellent{% elseif report.summary.averageScore >= 70 %}color-good{% elseif report.summary.averageScore >= 50 %}color-warn{% else %}color-poor{% endif %}">{{ report.summary.averageScore }}</div>
+            </div>
+        </td>
+        <td>
+            <div class="stat-card">
+                <div class="stat-label">Need Attention</div>
+                <div class="stat-value {% if report.summary.urlsNeedingAttention > 0 %}color-poor{% endif %}">{{ report.summary.urlsNeedingAttention }}</div>
+            </div>
+        </td>
+        <td>
+            <div class="stat-card">
+                <div class="stat-label">Total Issues</div>
+                <div class="stat-value">{{ report.totalIssues }}</div>
+            </div>
+        </td>
+    </tr>
+</table>
+
+{# Score Distribution + Severity Breakdown #}
+<table class="distribution-grid" cellspacing="0">
+    <tr>
+        <td style="width: 50%; vertical-align: top;">
+            <div class="section-title">Score Distribution</div>
+            <table cellspacing="0" style="width: 100%;">
+                <tr>
+                    <td><span class="dist-label">Excellent (90-100)</span></td>
+                    <td style="text-align: right;"><span class="dist-value color-excellent">{{ report.summary.scoreDistribution.excellent }}</span></td>
+                </tr>
+                <tr>
+                    <td><span class="dist-label">Good (70-89)</span></td>
+                    <td style="text-align: right;"><span class="dist-value color-good">{{ report.summary.scoreDistribution.good }}</span></td>
+                </tr>
+                <tr>
+                    <td><span class="dist-label">Needs Work (50-69)</span></td>
+                    <td style="text-align: right;"><span class="dist-value color-warn">{{ report.summary.scoreDistribution.needsWork }}</span></td>
+                </tr>
+                <tr>
+                    <td><span class="dist-label">Poor (0-49)</span></td>
+                    <td style="text-align: right;"><span class="dist-value color-poor">{{ report.summary.scoreDistribution.poor }}</span></td>
+                </tr>
+            </table>
+        </td>
+        <td style="width: 50%; vertical-align: top; padding-left: 20px;">
+            <div class="section-title">Severity Breakdown</div>
+            <table cellspacing="0" style="width: 100%;">
+                <tr>
+                    <td><span class="badge badge-critical">Critical</span></td>
+                    <td style="text-align: right;"><span class="dist-value">{{ report.severityCounts.critical }}</span></td>
+                </tr>
+                <tr>
+                    <td><span class="badge badge-serious">Serious</span></td>
+                    <td style="text-align: right;"><span class="dist-value">{{ report.severityCounts.serious }}</span></td>
+                </tr>
+                <tr>
+                    <td><span class="badge badge-moderate">Moderate</span></td>
+                    <td style="text-align: right;"><span class="dist-value">{{ report.severityCounts.moderate }}</span></td>
+                </tr>
+                <tr>
+                    <td><span class="badge badge-minor">Minor</span></td>
+                    <td style="text-align: right;"><span class="dist-value">{{ report.severityCounts.minor }}</span></td>
+                </tr>
+            </table>
+        </td>
+    </tr>
+</table>
+
+{# URL Scores Table #}
+<div class="section-title">URL Scores</div>
+{% if report.urlSummaries is empty %}
+    <div class="empty-state">No URLs have been audited yet.</div>
+{% else %}
+    <table class="url-table" cellspacing="0">
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th>URL</th>
+                <th>Score</th>
+                <th>Grade</th>
+                <th>Audits</th>
+                <th>Frequency</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for url in report.urlSummaries %}
+            <tr>
+                <td><strong>{{ url.name }}</strong></td>
+                <td>{{ url.address }}</td>
+                <td style="text-align: center;">
+                    {% if url.latestScore is not null %}
+                        <strong class="{% if url.latestScore >= 90 %}color-excellent{% elseif url.latestScore >= 70 %}color-good{% elseif url.latestScore >= 50 %}color-warn{% else %}color-poor{% endif %}">{{ url.latestScore }}</strong>
+                    {% else %}
+                        &mdash;
+                    {% endif %}
+                </td>
+                <td style="text-align: center;">
+                    <span class="grade {% if url.scoreGrade == 'A' %}grade-a{% elseif url.scoreGrade == 'B' %}grade-b{% elseif url.scoreGrade == 'C' %}grade-c{% elseif url.scoreGrade == 'F' %}grade-f{% endif %}">{{ url.scoreGrade }}</span>
+                </td>
+                <td style="text-align: center;">{{ url.totalAudits }}</td>
+                <td>{{ url.frequency }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+{% endif %}
+
+{# ===== PAGE 2+: ISSUE BREAKDOWN ===== #}
+{% if report.issuesByCategory is not empty %}
+<div class="page-break"></div>
+
+<div class="report-header">
+    <h1>Issue Breakdown</h1>
+    <div class="subtitle">{{ report.projectName }} &mdash; {{ report.totalIssues }} issue{{ report.totalIssues != 1 ? 's' : '' }} across {{ report.issuesByCategory|keys|length }} categor{{ report.issuesByCategory|keys|length != 1 ? 'ies' : 'y' }}</div>
+</div>
+
+{% for category, issues in report.issuesByCategory %}
+    <div class="category-header">{{ category }} ({{ issues|length }})</div>
+
+    {% for issue in issues %}
+    <div class="issue-card">
+        <div class="issue-title">
+            <span class="badge badge-{{ issue.severity|lower }}">{{ issue.severity }}</span>
+            {{ issue.title }}
+        </div>
+        <div class="issue-description">{{ issue.description }}</div>
+        <div class="issue-meta">
+            {% if issue.helpUrl is not null %}
+                Learn more: <a href="{{ issue.helpUrl }}">{{ issue.helpUrl }}</a>
+            {% endif %}
+        </div>
+        <div class="affected-urls">
+            Affected: {{ issue.affectedUrls|join(', ') }}
+        </div>
+    </div>
+    {% endfor %}
+{% endfor %}
+{% endif %}
+
+<div class="report-footer">
+    Generated by Beacon Audit &mdash; {{ report.generatedAt }}
+</div>
+
+</body>
+</html>

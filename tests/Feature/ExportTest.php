@@ -9,14 +9,20 @@ use App\Modules\Audit\Domain\Models\Audit;
 use App\Modules\Audit\Domain\ValueObjects\AccessibilityScore;
 use App\Modules\Audit\Domain\ValueObjects\AuditStatus;
 use App\Modules\Audit\Infrastructure\Repositories\SqliteAuditRepository;
+use App\Modules\Audit\Infrastructure\Repositories\SqliteIssueRepository;
 use App\Modules\Dashboard\Application\Services\DashboardStatistics;
 use App\Modules\Reporting\Application\Services\CsvExportService;
+use App\Modules\Reporting\Application\Services\PdfReportDataCollector;
+use App\Modules\Reporting\Application\Services\PdfReportService;
 use App\Modules\Url\Domain\Models\Url;
 use App\Modules\Url\Domain\ValueObjects\AuditFrequency;
 use App\Modules\Url\Domain\ValueObjects\UrlAddress;
+use App\Modules\Url\Infrastructure\Repositories\SqliteProjectRepository;
 use App\Modules\Url\Infrastructure\Repositories\SqliteUrlRepository;
 use DateTimeImmutable;
 use Tests\TestCase;
+use Twig\Environment;
+use Twig\Loader\FilesystemLoader;
 
 final class ExportTest extends TestCase
 {
@@ -31,12 +37,20 @@ final class ExportTest extends TestCase
 
         $this->urlRepository = new SqliteUrlRepository($this->database);
         $this->auditRepository = new SqliteAuditRepository($this->database);
+        $projectRepository = new SqliteProjectRepository($this->database);
+        $issueRepository = new SqliteIssueRepository($this->database);
+        $dashboardStatistics = new DashboardStatistics();
+        $loader = new FilesystemLoader(__DIR__ . '/../../src/Views');
+        $twig = new Environment($loader, ['strict_variables' => true]);
 
         $this->controller = new ExportController(
             $this->urlRepository,
             $this->auditRepository,
             new CsvExportService(),
-            new DashboardStatistics(),
+            $dashboardStatistics,
+            $projectRepository,
+            new PdfReportDataCollector($this->urlRepository, $this->auditRepository, $issueRepository, $dashboardStatistics),
+            new PdfReportService($twig),
         );
     }
 

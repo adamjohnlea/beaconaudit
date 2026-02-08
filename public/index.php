@@ -28,6 +28,8 @@ use App\Modules\Auth\Application\Services\UserService;
 use App\Modules\Auth\Infrastructure\Repositories\SqliteUserRepository;
 use App\Modules\Dashboard\Application\Services\DashboardStatistics;
 use App\Modules\Reporting\Application\Services\CsvExportService;
+use App\Modules\Reporting\Application\Services\PdfReportDataCollector;
+use App\Modules\Reporting\Application\Services\PdfReportService;
 use App\Modules\Url\Application\Services\BulkImportService;
 use App\Modules\Url\Application\Services\ProjectService;
 use App\Modules\Url\Application\Services\UrlService;
@@ -89,7 +91,9 @@ $projectService = new ProjectService($projectRepository);
 $urlController = new UrlController($urlService, $projectRepository, $twig, $bulkImportService);
 $projectController = new ProjectController($projectService, $twig);
 $dashboardController = new DashboardController($urlRepository, $auditRepository, $dashboardStatistics, $trendCalculator, $twig, $projectRepository, $issueRepository, $auditService);
-$exportController = new ExportController($urlRepository, $auditRepository, $csvExportService, $dashboardStatistics);
+$pdfReportDataCollector = new PdfReportDataCollector($urlRepository, $auditRepository, $issueRepository, $dashboardStatistics);
+$pdfReportService = new PdfReportService($twig);
+$exportController = new ExportController($urlRepository, $auditRepository, $csvExportService, $dashboardStatistics, $projectRepository, $pdfReportDataCollector, $pdfReportService);
 $authController = new AuthController($authService, $twig);
 $userController = new UserController($userService, $authService, $twig);
 
@@ -112,6 +116,7 @@ $router->get('/projects/{id}/edit', ProjectController::class, 'projects.edit', '
 $router->post('/projects/{id}/update', ProjectController::class, 'projects.update', 'projects.update');
 $router->post('/projects/{id}/delete', ProjectController::class, 'projects.destroy', 'projects.destroy');
 $router->get('/projects/{id}/dashboard', DashboardController::class, 'dashboard.project', 'dashboard.project');
+$router->get('/projects/{id}/report', ExportController::class, 'export.projectReport', 'export.projectReport');
 $router->get('/unassigned', DashboardController::class, 'dashboard.unassigned', 'dashboard.unassigned');
 
 $router->get('/urls', UrlController::class, 'urls.index', 'urls.index');
@@ -198,6 +203,7 @@ $response = $router->dispatch($request, static function (array $parameters, Requ
         'runAudit' => $dashboardController->runAudit($id ?? 0),
         'exportUrlAudits' => $exportController->exportUrlAudits($id ?? 0),
         'exportSummary' => $exportController->exportSummary(),
+        'export.projectReport' => $exportController->exportProjectReport($id ?? 0),
         'projects.index' => $projectController->index(),
         'projects.create' => $projectController->create(),
         'projects.store' => $projectController->store($request),
