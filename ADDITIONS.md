@@ -6,14 +6,17 @@ A roadmap of features, tools, and improvements to enhance Beacon Audit.
 
 ## Notifications & Alerts
 
+### ~~Email PDF Reports After Audit~~ — DONE
+~~Subscribe to projects and receive the PDF audit report by email (via AWS SES) when an audit completes. Per-user opt-in subscriptions, works from both manual audits and cron runs, one report per project per run.~~
+
 ### Email Alerts on Score Drops
-Send email notifications when a URL's accessibility score drops below a configured threshold or falls by more than a set number of points between audits. The URL model already has `alertThresholdScore` and `alertThresholdDrop` fields — this connects them to an actual delivery mechanism.
+Send email notifications when a URL's accessibility score drops below a configured threshold or falls by more than a set number of points between audits. The URL model already has `alertThresholdScore` and `alertThresholdDrop` fields — this connects them to the SES email infrastructure already in place.
 
 ### Slack Webhook Integration
 Post audit results and score drop alerts to a Slack channel via incoming webhooks. Useful for teams that want real-time visibility without checking the dashboard.
 
 ### Weekly Digest Emails
-Scheduled summary email sent to all users with: projects audited, average score changes, top issues discovered, and URLs that improved or degraded. Requires a new cron script (`cron/send-weekly-digests.php`).
+Scheduled summary email sent to all users with: projects audited, average score changes, top issues discovered, and URLs that improved or degraded. Can build on the existing `SesEmailService` and subscription model.
 
 ### In-App Notification Centre
 A notification bell in the dashboard header showing recent alerts (score drops, failed audits, new issues found). Mark as read/dismiss. The `notifications` database table already exists.
@@ -69,7 +72,7 @@ Add keyboard navigation: `j`/`k` to move through URL lists, `Enter` to view deta
 ## Reporting & Export
 
 ### Scheduled PDF Reports
-Automatically generate and email project PDF reports on a configurable schedule (weekly/monthly). Useful for stakeholders who want regular updates without logging in.
+Automatically generate and email project PDF reports on a configurable schedule (weekly/monthly). The email infrastructure and per-project subscriptions are already in place — this adds a dedicated cron script with its own schedule independent of audit runs.
 
 ### JSON/API Export
 Add a JSON export option alongside CSV for programmatic consumption. Could serve as the foundation for a future REST API.
