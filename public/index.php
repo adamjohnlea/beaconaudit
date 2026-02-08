@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-/** @var array{app: array{env: string, debug: bool}, database: array{path: string}, pagespeed: array{api_key: string, rate_limit_per_second: int, max_retries: int}} $config */
+/** @var array{app: array{env: string, debug: bool}, database: array{path: string}, pagespeed: array{api_key: string, rate_limit_per_second: int, max_retries: int}, ses: array{region: string, access_key: string, secret_key: string, from_address: string}} $config */
 $config = require __DIR__ . '/../src/bootstrap.php';
 
 use App\Database\Database;
@@ -27,6 +27,9 @@ use App\Modules\Auth\Application\Services\AuthenticationService;
 use App\Modules\Auth\Application\Services\UserService;
 use App\Modules\Auth\Infrastructure\Repositories\SqliteUserRepository;
 use App\Modules\Dashboard\Application\Services\DashboardStatistics;
+use App\Modules\Notification\Application\Services\AuditReportNotifier;
+use App\Modules\Notification\Application\Services\SesEmailService;
+use App\Modules\Notification\Infrastructure\Repositories\SqliteEmailSubscriptionRepository;
 use App\Modules\Reporting\Application\Services\CsvExportService;
 use App\Modules\Reporting\Application\Services\PdfReportDataCollector;
 use App\Modules\Reporting\Application\Services\PdfReportService;
@@ -88,11 +91,26 @@ $twig->addGlobal('csrf_token', $authService->getCsrfToken());
 
 $bulkImportService = new BulkImportService($urlRepository);
 $projectService = new ProjectService($projectRepository);
-$urlController = new UrlController($urlService, $projectRepository, $twig, $bulkImportService);
-$projectController = new ProjectController($projectService, $twig);
-$dashboardController = new DashboardController($urlRepository, $auditRepository, $dashboardStatistics, $trendCalculator, $twig, $projectRepository, $issueRepository, $auditService);
 $pdfReportDataCollector = new PdfReportDataCollector($urlRepository, $auditRepository, $issueRepository, $dashboardStatistics);
 $pdfReportService = new PdfReportService($twig);
+$subscriptionRepository = new SqliteEmailSubscriptionRepository($database);
+
+$auditReportNotifier = null;
+if (($config['ses']['access_key'] ?? '') !== '' && ($config['ses']['from_address'] ?? '') !== '') {
+    $sesEmailService = new SesEmailService($config['ses']);
+    $auditReportNotifier = new AuditReportNotifier(
+        $projectRepository,
+        $subscriptionRepository,
+        $pdfReportDataCollector,
+        $pdfReportService,
+        $sesEmailService,
+        $twig,
+    );
+}
+
+$urlController = new UrlController($urlService, $projectRepository, $twig, $bulkImportService);
+$projectController = new ProjectController($projectService, $twig);
+$dashboardController = new DashboardController($urlRepository, $auditRepository, $dashboardStatistics, $trendCalculator, $twig, $projectRepository, $issueRepository, $auditService, $auditReportNotifier, $subscriptionRepository);
 $exportController = new ExportController($urlRepository, $auditRepository, $csvExportService, $dashboardStatistics, $projectRepository, $pdfReportDataCollector, $pdfReportService);
 $authController = new AuthController($authService, $twig);
 $userController = new UserController($userService, $authService, $twig);
@@ -116,6 +134,7 @@ $router->get('/projects/{id}/edit', ProjectController::class, 'projects.edit', '
 $router->post('/projects/{id}/update', ProjectController::class, 'projects.update', 'projects.update');
 $router->post('/projects/{id}/delete', ProjectController::class, 'projects.destroy', 'projects.destroy');
 $router->get('/projects/{id}/dashboard', DashboardController::class, 'dashboard.project', 'dashboard.project');
+$router->post('/projects/{id}/subscribe', DashboardController::class, 'dashboard.subscribe', 'dashboard.subscribe');
 $router->get('/projects/{id}/report', ExportController::class, 'export.projectReport', 'export.projectReport');
 $router->get('/unassigned', DashboardController::class, 'dashboard.unassigned', 'dashboard.unassigned');
 
@@ -198,7 +217,8 @@ $response = $router->dispatch($request, static function (array $parameters, Requ
         'logout' => $authController->logout(),
         'index' => $dashboardController->index(),
         'show' => $dashboardController->show($id ?? 0),
-        'dashboard.project' => $dashboardController->showProject($id ?? 0),
+        'dashboard.project' => $dashboardController->showProject($id ?? 0, $currentUser->getId()),
+        'dashboard.subscribe' => $dashboardController->toggleSubscription($id ?? 0, $currentUser->getId() ?? 0),
         'dashboard.unassigned' => $dashboardController->showUnassigned(),
         'runAudit' => $dashboardController->runAudit($id ?? 0),
         'exportUrlAudits' => $exportController->exportUrlAudits($id ?? 0),

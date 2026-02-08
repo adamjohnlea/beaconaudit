@@ -13,7 +13,7 @@ use App\Modules\Url\Domain\Models\Project;
 use App\Modules\Url\Domain\Repositories\UrlRepositoryInterface;
 use DateTimeImmutable;
 
-final readonly class PdfReportDataCollector
+final readonly class PdfReportDataCollector implements PdfReportDataCollectorInterface
 {
     public function __construct(
         private UrlRepositoryInterface $urlRepository,

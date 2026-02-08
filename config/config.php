@@ -15,4 +15,10 @@ return [
         'rate_limit_per_second' => 1,
         'max_retries' => 3,
     ],
+    'ses' => [
+        'region' => $_ENV['AWS_SES_REGION'] ?? 'us-east-1',
+        'access_key' => $_ENV['AWS_SES_ACCESS_KEY'] ?? '',
+        'secret_key' => $_ENV['AWS_SES_SECRET_KEY'] ?? '',
+        'from_address' => $_ENV['AWS_SES_FROM_ADDRESS'] ?? '',
+    ],
 ];

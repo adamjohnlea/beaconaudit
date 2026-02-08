@@ -10,6 +10,8 @@ use App\Modules\Audit\Domain\Models\Audit;
 use App\Modules\Audit\Domain\Repositories\AuditRepositoryInterface;
 use App\Modules\Audit\Domain\Repositories\IssueRepositoryInterface;
 use App\Modules\Dashboard\Application\Services\DashboardStatistics;
+use App\Modules\Notification\Application\Services\AuditReportNotifier;
+use App\Modules\Notification\Domain\Repositories\EmailSubscriptionRepositoryInterface;
 use App\Modules\Url\Domain\Models\Url;
 use App\Modules\Url\Domain\Repositories\ProjectRepositoryInterface;
 use App\Modules\Url\Domain\Repositories\UrlRepositoryInterface;
@@ -28,6 +30,8 @@ final readonly class DashboardController
         private ProjectRepositoryInterface $projectRepository,
         private ?IssueRepositoryInterface $issueRepository = null,
         private ?AuditServiceInterface $auditService = null,
+        private ?AuditReportNotifier $auditReportNotifier = null,
+        private ?EmailSubscriptionRepositoryInterface $subscriptionRepository = null,
     ) {
     }
 
@@ -60,7 +64,7 @@ final readonly class DashboardController
         return new Response($html);
     }
 
-    public function showProject(int $projectId): Response
+    public function showProject(int $projectId, ?int $currentUserId = null): Response
     {
         $project = $this->projectRepository->findById($projectId);
 
@@ -73,10 +77,16 @@ final readonly class DashboardController
         $summary = $this->dashboardStatistics->calculateSummary($urls, $auditsByUrl);
         $urlSummaries = $this->dashboardStatistics->generateUrlSummaries($urls, $auditsByUrl);
 
+        $isSubscribed = false;
+        if ($currentUserId !== null && $this->subscriptionRepository !== null) {
+            $isSubscribed = $this->subscriptionRepository->isSubscribed($currentUserId, $projectId);
+        }
+
         $html = $this->twig->render('dashboard/project.twig', [
             'project' => $project,
             'summary' => $summary,
             'urlSummaries' => $urlSummaries,
+            'isSubscribed' => $isSubscribed,
         ]);
 
         return new Response($html);
@@ -143,7 +153,35 @@ final readonly class DashboardController
             $this->auditService->runAudit($urlId);
         }
 
+        if ($this->auditReportNotifier !== null && $url->getProjectId() !== null) {
+            try {
+                $this->auditReportNotifier->notifyForProject($url->getProjectId());
+            } catch (\Throwable $e) {
+                error_log('Failed to send audit report notifications: ' . $e->getMessage());
+            }
+        }
+
         return new RedirectResponse('/dashboard/' . $urlId);
+    }
+
+    public function toggleSubscription(int $projectId, int $userId): Response
+    {
+        if ($this->subscriptionRepository === null) {
+            return new RedirectResponse('/projects/' . $projectId . '/dashboard');
+        }
+
+        $project = $this->projectRepository->findById($projectId);
+        if ($project === null) {
+            return new Response('Not Found', 404);
+        }
+
+        if ($this->subscriptionRepository->isSubscribed($userId, $projectId)) {
+            $this->subscriptionRepository->unsubscribe($userId, $projectId);
+        } else {
+            $this->subscriptionRepository->subscribe($userId, $projectId);
+        }
+
+        return new RedirectResponse('/projects/' . $projectId . '/dashboard');
     }
 
     /**

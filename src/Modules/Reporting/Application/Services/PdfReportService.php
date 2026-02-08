@@ -9,7 +9,7 @@ use Dompdf\Dompdf;
 use Dompdf\Options;
 use Twig\Environment;
 
-final readonly class PdfReportService
+final readonly class PdfReportService implements PdfReportServiceInterface
 {
     public function __construct(
         private Environment $twig,
