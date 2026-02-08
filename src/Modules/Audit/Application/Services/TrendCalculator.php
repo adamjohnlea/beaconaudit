@@ -18,9 +18,10 @@ final class TrendCalculator
             return Trend::STABLE;
         }
 
-        $first = $audits[0];
-        $last = $audits[count($audits) - 1];
-        $delta = $last->getScore()->delta($first->getScore());
+        // Audits come from repository in DESC order (newest first)
+        $latest = $audits[0];
+        $earliest = $audits[count($audits) - 1];
+        $delta = $latest->getScore()->delta($earliest->getScore());
 
         return Trend::fromDelta($delta);
     }

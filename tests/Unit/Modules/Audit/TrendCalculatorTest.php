@@ -24,11 +24,12 @@ final class TrendCalculatorTest extends TestCase
 
     public function test_determines_improving_trend_from_ascending_scores(): void
     {
+        // Audits in DESC order (newest first) - matching repository behavior
         $audits = [
-            $this->makeAudit(70, '2024-01-01'),
-            $this->makeAudit(75, '2024-01-08'),
-            $this->makeAudit(80, '2024-01-15'),
             $this->makeAudit(85, '2024-01-22'),
+            $this->makeAudit(80, '2024-01-15'),
+            $this->makeAudit(75, '2024-01-08'),
+            $this->makeAudit(70, '2024-01-01'),
         ];
 
         $trend = $this->calculator->calculateTrend($audits);
@@ -38,11 +39,12 @@ final class TrendCalculatorTest extends TestCase
 
     public function test_determines_degrading_trend_from_descending_scores(): void
     {
+        // Audits in DESC order (newest first) - matching repository behavior
         $audits = [
-            $this->makeAudit(90, '2024-01-01'),
-            $this->makeAudit(85, '2024-01-08'),
-            $this->makeAudit(80, '2024-01-15'),
             $this->makeAudit(75, '2024-01-22'),
+            $this->makeAudit(80, '2024-01-15'),
+            $this->makeAudit(85, '2024-01-08'),
+            $this->makeAudit(90, '2024-01-01'),
         ];
 
         $trend = $this->calculator->calculateTrend($audits);
@@ -83,12 +85,12 @@ final class TrendCalculatorTest extends TestCase
 
     public function test_uses_overall_direction_for_mixed_scores(): void
     {
-        // Overall trend: 70 -> 85 = improving despite dip
+        // Audits in DESC order (newest first) - Overall trend: 85 -> 70 = improving despite dip
         $audits = [
-            $this->makeAudit(70, '2024-01-01'),
-            $this->makeAudit(65, '2024-01-08'),
-            $this->makeAudit(80, '2024-01-15'),
             $this->makeAudit(85, '2024-01-22'),
+            $this->makeAudit(80, '2024-01-15'),
+            $this->makeAudit(65, '2024-01-08'),
+            $this->makeAudit(70, '2024-01-01'),
         ];
 
         $trend = $this->calculator->calculateTrend($audits);
@@ -98,18 +100,19 @@ final class TrendCalculatorTest extends TestCase
 
     public function test_generates_graph_data_from_audits(): void
     {
+        // Audits in DESC order (newest first) - matching repository behavior
         $audits = [
-            $this->makeAudit(70, '2024-01-01'),
-            $this->makeAudit(80, '2024-01-08'),
             $this->makeAudit(85, '2024-01-15'),
+            $this->makeAudit(80, '2024-01-08'),
+            $this->makeAudit(70, '2024-01-01'),
         ];
 
         $graphData = $this->calculator->generateGraphData($audits);
 
         $this->assertCount(3, $graphData);
-        $this->assertSame(70, $graphData[0]['score']);
-        $this->assertSame('2024-01-01', $graphData[0]['date']);
-        $this->assertSame(85, $graphData[2]['score']);
+        $this->assertSame(85, $graphData[0]['score']);
+        $this->assertSame('2024-01-15', $graphData[0]['date']);
+        $this->assertSame(70, $graphData[2]['score']);
     }
 
     public function test_calculates_average_score(): void
