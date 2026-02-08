@@ -133,6 +133,20 @@ final readonly class SqliteUrlRepository implements UrlRepositoryInterface
         $this->database->query('DELETE FROM urls WHERE id = ?', [$id]);
     }
 
+    public function findByUrl(string $url): ?Url
+    {
+        $stmt = $this->database->query('SELECT * FROM urls WHERE url = ?', [$url]);
+
+        /** @var array{id: string|int, project_id: string|int|null, url: string, name: string|null, audit_frequency: string, enabled: string|int, alert_threshold_score: string|int|null, alert_threshold_drop: string|int|null, last_audited_at: string|null, created_at: string, updated_at: string}|false $row */
+        $row = $stmt->fetch();
+
+        if ($row === false) {
+            return null;
+        }
+
+        return $this->hydrateUrl($row);
+    }
+
     /**
      * @param  array<array{id: string|int, project_id: string|int|null, url: string, name: string|null, audit_frequency: string, enabled: string|int, alert_threshold_score: string|int|null, alert_threshold_drop: string|int|null, last_audited_at: string|null, created_at: string, updated_at: string}> $rows
      * @return array<Url>

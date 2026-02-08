@@ -29,6 +29,10 @@ final class UrlServiceTest extends TestCase
     public function test_create_saves_url_and_returns_it(): void
     {
         $this->urlRepository
+            ->method('findByUrl')
+            ->willReturn(null);
+
+        $this->urlRepository
             ->expects($this->once())
             ->method('save')
             ->willReturnCallback(static function (Url $url): Url {
@@ -52,6 +56,10 @@ final class UrlServiceTest extends TestCase
     public function test_create_with_project_id(): void
     {
         $this->urlRepository
+            ->method('findByUrl')
+            ->willReturn(null);
+
+        $this->urlRepository
             ->expects($this->once())
             ->method('save')
             ->willReturnCallback(static function (Url $url): Url {
@@ -68,6 +76,28 @@ final class UrlServiceTest extends TestCase
 
         $this->assertSame(5, $result->getProjectId());
         $this->assertSame(AuditFrequency::DAILY, $result->getAuditFrequency());
+    }
+
+    public function test_create_throws_exception_for_duplicate_url(): void
+    {
+        $existingUrl = $this->makeUrl(1, 'https://example.com', 'Existing');
+
+        $this->urlRepository
+            ->expects($this->once())
+            ->method('findByUrl')
+            ->with('https://example.com')
+            ->willReturn($existingUrl);
+
+        $this->urlRepository->expects($this->never())->method('save');
+
+        $this->expectException(ValidationException::class);
+        $this->expectExceptionMessage('This URL has already been added.');
+
+        $this->service->create(
+            url: 'https://example.com',
+            name: 'Duplicate',
+            frequency: 'weekly',
+        );
     }
 
     public function test_create_throws_exception_for_invalid_url(): void

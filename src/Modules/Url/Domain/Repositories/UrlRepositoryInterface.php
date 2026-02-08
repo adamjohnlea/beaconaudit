@@ -35,4 +35,6 @@ interface UrlRepositoryInterface
     public function findEnabled(): array;
 
     public function delete(int $id): void;
+
+    public function findByUrl(string $url): ?Url;
 }

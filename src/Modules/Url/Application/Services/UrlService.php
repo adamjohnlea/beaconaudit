@@ -25,6 +25,12 @@ final readonly class UrlService
         ?int $projectId = null,
     ): Url {
         $urlAddress = new UrlAddress($url);
+
+        $existing = $this->urlRepository->findByUrl($urlAddress->getValue());
+        if ($existing !== null) {
+            throw new ValidationException('This URL has already been added.');
+        }
+
         $auditFrequency = $this->resolveFrequency($frequency);
         $now = new DateTimeImmutable();
 
