@@ -72,16 +72,16 @@ Get a PageSpeed Insights API key from the [Google Cloud Console](https://console
 
 ### Environment Variables
 
-| Variable | Description | Default |
-|----------|-------------|---------|
-| `APP_ENV` | Environment (`local`, `production`) | `production` |
-| `APP_DEBUG` | Enable debug mode (`true`/`false`) | `false` |
+| Variable | Description | Default                   |
+|----------|-------------|---------------------------|
+| `APP_ENV` | Environment (`local`, `production`) | `production`              |
+| `APP_DEBUG` | Enable debug mode (`true`/`false`) | `false`                   |
 | `DB_PATH` | Path to SQLite database file | `storage/database.sqlite` |
-| `PAGESPEED_API_KEY` | Google PageSpeed Insights API key | (required) |
-| `AWS_SES_REGION` | AWS SES region | `us-east-1` |
-| `AWS_SES_ACCESS_KEY` | AWS IAM access key for SES | (optional) |
-| `AWS_SES_SECRET_KEY` | AWS IAM secret key for SES | (optional) |
-| `AWS_SES_FROM_ADDRESS` | Verified sender email address | (optional) |
+| `PAGESPEED_API_KEY` | Google PageSpeed Insights API key | (required)                |
+| `AWS_SES_REGION` | AWS SES region | `us-west-2`               |
+| `AWS_SES_ACCESS_KEY` | AWS IAM access key for SES | (optional)                |
+| `AWS_SES_SECRET_KEY` | AWS IAM secret key for SES | (optional)                |
+| `AWS_SES_FROM_ADDRESS` | Verified sender email address | (optional)                |
 
 > **Note:** The `.env` file is excluded from Git. On a fresh clone (e.g. on a server), you must create it manually — see the [Deployment Guide](DEPLOYMENT.md#8-configure-environment).
 

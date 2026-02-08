@@ -53,7 +53,12 @@
       "WebFetch(domain:www.debugbear.com)",
       "WebFetch(domain:github.com)",
       "WebFetch(domain:gist.github.com)",
-      "WebFetch(domain:paulirish.github.io)"
+      "WebFetch(domain:paulirish.github.io)",
+      "Bash(cat:*)",
+      "Bash(python3:*)",
+      "Bash(xargs ls:*)",
+      "Bash(grep:*)",
+      "Bash(git -C /Users/adamlea/Herd/beaconaudit log --oneline)"
     ]
   }
 }
