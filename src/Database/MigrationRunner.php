@@ -17,8 +17,12 @@ final class MigrationRunner
 
         $migrationsPath = __DIR__ . '/Migrations';
 
-        /** @var array<string> $files */
         $files = glob($migrationsPath . '/*.sql');
+
+        if ($files === false) {
+            return;
+        }
+
         sort($files);
 
         foreach ($files as $file) {

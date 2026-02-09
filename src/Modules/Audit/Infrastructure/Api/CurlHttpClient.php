@@ -10,6 +10,8 @@ final readonly class CurlHttpClient implements HttpClientInterface
 
     public function get(string $url): HttpResponse
     {
+        assert($url !== '', 'URL cannot be empty');
+
         $ch = curl_init();
 
         curl_setopt_array($ch, [

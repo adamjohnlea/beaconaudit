@@ -2,12 +2,10 @@ includes:
     - vendor/phpstan/phpstan-strict-rules/rules.neon
 
 parameters:
-    level: 9
+    level: 10
     paths:
         - src
     excludePaths:
         - src/Database/Migrations
     tmpDir: .phpstan
-    checkMissingIterableValueType: true
-    checkGenericClassInNonGenericObjectType: true
     reportUnmatchedIgnoredErrors: true

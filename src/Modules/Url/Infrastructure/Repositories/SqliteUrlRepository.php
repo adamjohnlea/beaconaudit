@@ -88,7 +88,10 @@ final readonly class SqliteUrlRepository implements UrlRepositoryInterface
     {
         $stmt = $this->database->query('SELECT * FROM urls ORDER BY name ASC');
 
-        return $this->hydrateMany($stmt->fetchAll());
+        /** @var array<array{id: string|int, project_id: string|int|null, url: string, name: string|null, audit_frequency: string, enabled: string|int, alert_threshold_score: string|int|null, alert_threshold_drop: string|int|null, last_audited_at: string|null, created_at: string, updated_at: string}> $rows */
+        $rows = $stmt->fetchAll();
+
+        return $this->hydrateMany($rows);
     }
 
     /**
@@ -101,7 +104,10 @@ final readonly class SqliteUrlRepository implements UrlRepositoryInterface
             [$projectId],
         );
 
-        return $this->hydrateMany($stmt->fetchAll());
+        /** @var array<array{id: string|int, project_id: string|int|null, url: string, name: string|null, audit_frequency: string, enabled: string|int, alert_threshold_score: string|int|null, alert_threshold_drop: string|int|null, last_audited_at: string|null, created_at: string, updated_at: string}> $rows */
+        $rows = $stmt->fetchAll();
+
+        return $this->hydrateMany($rows);
     }
 
     /**
@@ -113,7 +119,10 @@ final readonly class SqliteUrlRepository implements UrlRepositoryInterface
             'SELECT * FROM urls WHERE project_id IS NULL ORDER BY name ASC',
         );
 
-        return $this->hydrateMany($stmt->fetchAll());
+        /** @var array<array{id: string|int, project_id: string|int|null, url: string, name: string|null, audit_frequency: string, enabled: string|int, alert_threshold_score: string|int|null, alert_threshold_drop: string|int|null, last_audited_at: string|null, created_at: string, updated_at: string}> $rows */
+        $rows = $stmt->fetchAll();
+
+        return $this->hydrateMany($rows);
     }
 
     /**
@@ -125,7 +134,10 @@ final readonly class SqliteUrlRepository implements UrlRepositoryInterface
             'SELECT * FROM urls WHERE enabled = 1 ORDER BY name ASC',
         );
 
-        return $this->hydrateMany($stmt->fetchAll());
+        /** @var array<array{id: string|int, project_id: string|int|null, url: string, name: string|null, audit_frequency: string, enabled: string|int, alert_threshold_score: string|int|null, alert_threshold_drop: string|int|null, last_audited_at: string|null, created_at: string, updated_at: string}> $rows */
+        $rows = $stmt->fetchAll();
+
+        return $this->hydrateMany($rows);
     }
 
     public function delete(int $id): void

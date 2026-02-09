@@ -50,6 +50,9 @@ final class Router
         return $matcher->match($request->getPathInfo());
     }
 
+    /**
+     * @param callable(array<string, mixed>, Request): Response $controllerResolver
+     */
     public function dispatch(Request $request, callable $controllerResolver): Response
     {
         try {
