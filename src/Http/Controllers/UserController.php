@@ -27,6 +27,7 @@ final readonly class UserController
         $users = $this->userService->findAll();
 
         $html = $this->twig->render('users/index.twig', [
+            'active_nav' => 'users',
             'users' => $users,
         ]);
 
@@ -36,6 +37,7 @@ final readonly class UserController
     public function create(): Response
     {
         $html = $this->twig->render('users/create.twig', [
+            'active_nav' => 'users',
             'roles' => UserRole::cases(),
         ]);
 
@@ -54,6 +56,7 @@ final readonly class UserController
             return new RedirectResponse('/users');
         } catch (ValidationException $e) {
             $html = $this->twig->render('users/create.twig', [
+            'active_nav' => 'users',
                 'error' => $e->getMessage(),
                 'roles' => UserRole::cases(),
                 'old' => $request->request->all(),
@@ -72,6 +75,7 @@ final readonly class UserController
         }
 
         $html = $this->twig->render('users/edit.twig', [
+            'active_nav' => 'users',
             'user' => $user,
             'roles' => UserRole::cases(),
         ]);
@@ -100,6 +104,7 @@ final readonly class UserController
             }
 
             $html = $this->twig->render('users/edit.twig', [
+            'active_nav' => 'users',
                 'error' => $e->getMessage(),
                 'user' => $user,
                 'roles' => UserRole::cases(),

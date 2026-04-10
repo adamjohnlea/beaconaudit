@@ -44,6 +44,7 @@ final readonly class UrlController
         $latestScores = $this->auditRepository->findLatestScoresByUrlIds(array_values($urlIds));
 
         $html = $this->twig->render('urls/index.twig', [
+            'active_nav' => 'urls',
             'urls' => $urls,
             'latestScores' => $latestScores,
             'search' => $search,
@@ -60,6 +61,7 @@ final readonly class UrlController
         $projects = $this->projectRepository->findAll();
 
         $html = $this->twig->render('urls/create.twig', [
+            'active_nav' => 'urls',
             'projects' => $projects,
             'frequencies' => AuditFrequency::cases(),
             'auditStrategies' => AuditStrategy::cases(),
@@ -92,6 +94,7 @@ final readonly class UrlController
             $projects = $this->projectRepository->findAll();
 
             $html = $this->twig->render('urls/create.twig', [
+            'active_nav' => 'urls',
                 'error' => $e->getMessage(),
                 'projects' => $projects,
                 'frequencies' => AuditFrequency::cases(),
@@ -114,6 +117,7 @@ final readonly class UrlController
         $projects = $this->projectRepository->findAll();
 
         $html = $this->twig->render('urls/edit.twig', [
+            'active_nav' => 'urls',
             'url' => $url,
             'projects' => $projects,
             'frequencies' => AuditFrequency::cases(),
@@ -156,6 +160,7 @@ final readonly class UrlController
             $projects = $this->projectRepository->findAll();
 
             $html = $this->twig->render('urls/edit.twig', [
+            'active_nav' => 'urls',
                 'error' => $e->getMessage(),
                 'url' => $url,
                 'projects' => $projects,
@@ -183,6 +188,7 @@ final readonly class UrlController
         $projects = $this->projectRepository->findAll();
 
         $html = $this->twig->render('urls/bulk-import.twig', [
+            'active_nav' => 'urls',
             'projects' => $projects,
             'frequencies' => AuditFrequency::cases(),
         ]);
@@ -220,6 +226,7 @@ final readonly class UrlController
         }
 
         $html = $this->twig->render('urls/bulk-import-result.twig', [
+            'active_nav' => 'urls',
             'result' => $result,
         ]);
 
@@ -231,6 +238,7 @@ final readonly class UrlController
         $projects = $this->projectRepository->findAll();
 
         $html = $this->twig->render('urls/bulk-import.twig', [
+            'active_nav' => 'urls',
             'error' => $error,
             'projects' => $projects,
             'frequencies' => AuditFrequency::cases(),

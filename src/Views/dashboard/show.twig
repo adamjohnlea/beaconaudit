@@ -6,6 +6,10 @@
     <div class="flex items-center gap-3 text-sm">
         <div class="flex items-center gap-2">
             <a href="/" class="text-text-muted hover:text-text-secondary transition-colors">Dashboard</a>
+            {% if project is not null %}
+                <span class="text-text-muted">/</span>
+                <a href="/projects/{{ project.id }}/dashboard" class="text-text-muted hover:text-text-secondary transition-colors">{{ project.name.value }}</a>
+            {% endif %}
             <span class="text-text-muted">/</span>
             <span class="text-text-primary font-medium truncate max-w-[200px]">{{ url.name ?? url.url.value }}</span>
             <a href="{{ url.url.value }}" target="_blank" rel="noopener noreferrer" class="text-xs text-text-muted hover:text-text-secondary underline underline-offset-2 decoration-stone-300 hover:decoration-stone-400 transition-colors ml-1">{{ url.url.value }}</a>

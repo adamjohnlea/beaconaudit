@@ -24,6 +24,7 @@ final readonly class ProjectController
         $projects = $this->projectService->findAll();
 
         $html = $this->twig->render('projects/index.twig', [
+            'active_nav' => 'projects',
             'projects' => $projects,
         ]);
 
@@ -32,7 +33,9 @@ final readonly class ProjectController
 
     public function create(): Response
     {
-        $html = $this->twig->render('projects/create.twig');
+        $html = $this->twig->render('projects/create.twig', [
+            'active_nav' => 'projects',
+        ]);
 
         return new Response($html);
     }
@@ -48,6 +51,7 @@ final readonly class ProjectController
             return new RedirectResponse('/projects');
         } catch (ValidationException $e) {
             $html = $this->twig->render('projects/create.twig', [
+            'active_nav' => 'projects',
                 'error' => $e->getMessage(),
                 'old' => $request->request->all(),
             ]);
@@ -65,6 +69,7 @@ final readonly class ProjectController
         }
 
         $html = $this->twig->render('projects/edit.twig', [
+            'active_nav' => 'projects',
             'project' => $project,
         ]);
 
@@ -89,6 +94,7 @@ final readonly class ProjectController
             }
 
             $html = $this->twig->render('projects/edit.twig', [
+            'active_nav' => 'projects',
                 'error' => $e->getMessage(),
                 'project' => $project,
             ]);

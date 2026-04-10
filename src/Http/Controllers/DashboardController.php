@@ -57,6 +57,7 @@ final readonly class DashboardController
         $unassignedSummary = $this->dashboardStatistics->calculateSummary($unassignedUrls, $unassignedAuditsByUrl);
 
         $html = $this->twig->render('dashboard/index.twig', [
+            'active_nav' => 'dashboard',
             'projectCards' => $projectCards,
             'unassignedSummary' => $unassignedSummary,
         ]);
@@ -83,6 +84,7 @@ final readonly class DashboardController
         }
 
         $html = $this->twig->render('dashboard/project.twig', [
+            'active_nav' => 'dashboard',
             'project' => $project,
             'summary' => $summary,
             'urlSummaries' => $urlSummaries,
@@ -100,6 +102,7 @@ final readonly class DashboardController
         $urlSummaries = $this->dashboardStatistics->generateUrlSummaries($urls, $auditsByUrl);
 
         $html = $this->twig->render('dashboard/project.twig', [
+            'active_nav' => 'dashboard',
             'project' => null,
             'summary' => $summary,
             'urlSummaries' => $urlSummaries,
@@ -116,6 +119,10 @@ final readonly class DashboardController
             return new Response('Not Found', 404);
         }
 
+        $project = $url->getProjectId() !== null
+            ? $this->projectRepository->findById($url->getProjectId())
+            : null;
+
         $audits = $this->auditRepository->findByUrlId($urlId);
         $trend = $this->trendCalculator->calculateTrend($audits);
         $graphData = $this->trendCalculator->generateGraphData($audits);
@@ -129,7 +136,9 @@ final readonly class DashboardController
         }
 
         $html = $this->twig->render('dashboard/show.twig', [
+            'active_nav' => 'dashboard',
             'url' => $url,
+            'project' => $project,
             'audits' => $audits,
             'trend' => $trend,
             'graphData' => $graphData,
