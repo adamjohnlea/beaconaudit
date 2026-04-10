@@ -129,10 +129,18 @@ final readonly class DashboardController
         $averageScore = $this->trendCalculator->calculateAverage($audits);
         $latestScore = $audits !== [] ? $audits[0]->getScore()->getValue() : null;
 
-        $issues = [];
-        if ($audits !== [] && $this->issueRepository !== null) {
-            $latestAuditId = $audits[0]->getId() ?? 0;
-            $issues = $this->issueRepository->findByAuditId($latestAuditId);
+        $desktopIssues = [];
+        $mobileIssues = [];
+        if ($this->issueRepository !== null) {
+            $latestDesktop = $this->auditRepository->findLatestCompletedByUrlIdAndStrategy($urlId, \App\Modules\Audit\Domain\ValueObjects\RunStrategy::DESKTOP);
+            $latestMobile = $this->auditRepository->findLatestCompletedByUrlIdAndStrategy($urlId, \App\Modules\Audit\Domain\ValueObjects\RunStrategy::MOBILE);
+
+            if ($latestDesktop !== null) {
+                $desktopIssues = $this->issueRepository->findByAuditId($latestDesktop->getId() ?? 0);
+            }
+            if ($latestMobile !== null) {
+                $mobileIssues = $this->issueRepository->findByAuditId($latestMobile->getId() ?? 0);
+            }
         }
 
         $html = $this->twig->render('dashboard/show.twig', [
@@ -144,7 +152,8 @@ final readonly class DashboardController
             'graphData' => $graphData,
             'averageScore' => $averageScore,
             'latestScore' => $latestScore,
-            'issues' => $issues,
+            'desktopIssues' => $desktopIssues,
+            'mobileIssues' => $mobileIssues,
         ]);
 
         return new Response($html);
