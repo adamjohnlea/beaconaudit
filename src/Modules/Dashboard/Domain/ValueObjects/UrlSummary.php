@@ -14,6 +14,8 @@ final readonly class UrlSummary
         private int $totalAudits,
         private string $frequency,
         private bool $enabled,
+        private ?int $latestDesktopScore = null,
+        private ?int $latestMobileScore = null,
     ) {
     }
 
@@ -50,6 +52,16 @@ final readonly class UrlSummary
     public function isEnabled(): bool
     {
         return $this->enabled;
+    }
+
+    public function getLatestDesktopScore(): ?int
+    {
+        return $this->latestDesktopScore;
+    }
+
+    public function getLatestMobileScore(): ?int
+    {
+        return $this->latestMobileScore;
     }
 
     public function getScoreGrade(): string

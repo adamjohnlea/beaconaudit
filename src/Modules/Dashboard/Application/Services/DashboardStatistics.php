@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Modules\Dashboard\Application\Services;
 
 use App\Modules\Audit\Domain\Models\Audit;
+use App\Modules\Audit\Domain\ValueObjects\RunStrategy;
 use App\Modules\Dashboard\Domain\ValueObjects\DashboardSummary;
 use App\Modules\Dashboard\Domain\ValueObjects\UrlSummary;
 use App\Modules\Url\Domain\Models\Url;
@@ -71,7 +72,24 @@ final class DashboardStatistics
         foreach ($urls as $url) {
             $urlId = $url->getId() ?? 0;
             $audits = $auditsByUrl[$urlId] ?? [];
+
             $latestScore = $audits !== [] ? $audits[0]->getScore()->getValue() : null;
+            $latestDesktopScore = null;
+            $latestMobileScore = null;
+
+            foreach ($audits as $audit) {
+                if ($latestDesktopScore === null && $audit->getStrategy() === RunStrategy::DESKTOP) {
+                    $latestDesktopScore = $audit->getScore()->getValue();
+                }
+
+                if ($latestMobileScore === null && $audit->getStrategy() === RunStrategy::MOBILE) {
+                    $latestMobileScore = $audit->getScore()->getValue();
+                }
+
+                if ($latestDesktopScore !== null && $latestMobileScore !== null) {
+                    break;
+                }
+            }
 
             $summaries[] = new UrlSummary(
                 urlId: $urlId,
@@ -81,6 +99,8 @@ final class DashboardStatistics
                 totalAudits: count($audits),
                 frequency: $url->getAuditFrequency()->label(),
                 enabled: $url->isEnabled(),
+                latestDesktopScore: $latestDesktopScore,
+                latestMobileScore: $latestMobileScore,
             );
         }
 
