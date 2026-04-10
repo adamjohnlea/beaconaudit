@@ -14,8 +14,8 @@
 {% endblock %}
 
 {% block content %}
-<div class="space-y-6">
-    <form method="GET" action="/urls" class="flex items-center gap-2">
+<div>
+    <form method="GET" action="/urls" class="flex items-center gap-2 mb-4">
         <input type="text" name="search" value="{{ search }}" placeholder="Search by name or URL…"
                class="h-8 w-72 text-sm">
         <button type="submit" class="inline-flex items-center h-8 px-3 bg-accent text-white text-[13px] font-medium rounded-lg hover:bg-accent-hover transition-colors duration-150">Search</button>
@@ -105,7 +105,7 @@
         </div>
 
         {% if totalPages > 1 %}
-        <div class="flex items-center justify-between text-sm text-text-muted">
+        <div class="flex items-center justify-between text-sm text-text-muted mt-4">
             <span>Showing {{ urls|length }} of {{ total }} URLs</span>
             <div class="flex items-center gap-1">
                 {% if currentPage > 1 %}
@@ -131,7 +131,7 @@
             </div>
         </div>
         {% else %}
-        <div class="text-sm text-text-muted">Showing {{ urls|length }} of {{ total }} URLs</div>
+        <div class="text-sm text-text-muted mt-4">Showing {{ urls|length }} of {{ total }} URLs</div>
         {% endif %}
     {% endif %}
 </div>
