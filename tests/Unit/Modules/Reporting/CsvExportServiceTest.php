@@ -7,6 +7,7 @@ namespace Tests\Unit\Modules\Reporting;
 use App\Modules\Audit\Domain\Models\Audit;
 use App\Modules\Audit\Domain\ValueObjects\AccessibilityScore;
 use App\Modules\Audit\Domain\ValueObjects\AuditStatus;
+use App\Modules\Audit\Domain\ValueObjects\RunStrategy;
 use App\Modules\Reporting\Application\Services\CsvExportService;
 use DateTimeImmutable;
 use PHPUnit\Framework\TestCase;
@@ -103,6 +104,7 @@ final class CsvExportServiceTest extends TestCase
             urlId: 1,
             score: new AccessibilityScore($score),
             status: $status,
+            strategy: RunStrategy::DESKTOP,
             auditDate: $auditDate,
             rawResponse: null,
             errorMessage: null,

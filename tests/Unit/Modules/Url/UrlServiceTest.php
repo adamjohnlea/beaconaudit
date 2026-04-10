@@ -8,6 +8,7 @@ use App\Modules\Url\Application\Services\UrlService;
 use App\Modules\Url\Domain\Models\Url;
 use App\Modules\Url\Domain\Repositories\UrlRepositoryInterface;
 use App\Modules\Url\Domain\ValueObjects\AuditFrequency;
+use App\Modules\Url\Domain\ValueObjects\AuditStrategy;
 use App\Modules\Url\Domain\ValueObjects\UrlAddress;
 use App\Shared\Exceptions\ValidationException;
 use DateTimeImmutable;
@@ -256,6 +257,7 @@ final class UrlServiceTest extends TestCase
             url: new UrlAddress($address),
             name: $name,
             auditFrequency: AuditFrequency::WEEKLY,
+            auditStrategy: AuditStrategy::BOTH,
             enabled: true,
             alertsEnabled: false,
             alertThresholdScore: null,

@@ -8,12 +8,14 @@ use App\Modules\Audit\Domain\Models\Audit;
 use App\Modules\Audit\Domain\Models\AuditComparison;
 use App\Modules\Audit\Domain\ValueObjects\AccessibilityScore;
 use App\Modules\Audit\Domain\ValueObjects\AuditStatus;
+use App\Modules\Audit\Domain\ValueObjects\RunStrategy;
 use App\Modules\Audit\Domain\ValueObjects\ScoreDelta;
 use App\Modules\Audit\Domain\ValueObjects\Trend;
 use App\Modules\Audit\Infrastructure\Repositories\SqliteAuditComparisonRepository;
 use App\Modules\Audit\Infrastructure\Repositories\SqliteAuditRepository;
 use App\Modules\Url\Domain\Models\Url;
 use App\Modules\Url\Domain\ValueObjects\AuditFrequency;
+use App\Modules\Url\Domain\ValueObjects\AuditStrategy;
 use App\Modules\Url\Domain\ValueObjects\UrlAddress;
 use App\Modules\Url\Infrastructure\Repositories\SqliteUrlRepository;
 use DateTimeImmutable;
@@ -109,6 +111,7 @@ final class SqliteAuditComparisonRepositoryTest extends TestCase
             url: new UrlAddress('https://example.com'),
             name: null,
             auditFrequency: AuditFrequency::WEEKLY,
+            auditStrategy: AuditStrategy::BOTH,
             enabled: true,
             alertsEnabled: false,
             alertThresholdScore: null,
@@ -126,6 +129,7 @@ final class SqliteAuditComparisonRepositoryTest extends TestCase
             urlId: $url->getId() ?? 0,
             score: new AccessibilityScore($score1),
             status: AuditStatus::COMPLETED,
+            strategy: RunStrategy::DESKTOP,
             auditDate: $now,
             rawResponse: null,
             errorMessage: null,
@@ -139,6 +143,7 @@ final class SqliteAuditComparisonRepositoryTest extends TestCase
             urlId: $url->getId() ?? 0,
             score: new AccessibilityScore($score2),
             status: AuditStatus::COMPLETED,
+            strategy: RunStrategy::DESKTOP,
             auditDate: $now,
             rawResponse: null,
             errorMessage: null,

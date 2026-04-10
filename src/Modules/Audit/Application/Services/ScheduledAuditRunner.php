@@ -32,7 +32,9 @@ final readonly class ScheduledAuditRunner
             }
 
             try {
-                $results[] = $this->auditService->runAudit($url->getId() ?? 0);
+                foreach ($this->auditService->runAudit($url->getId() ?? 0) as $audit) {
+                    $results[] = $audit;
+                }
             } catch (\Throwable) {
                 // Continue with next URL on failure
             }

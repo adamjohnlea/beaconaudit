@@ -4,10 +4,13 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers;
 
+use App\Modules\Audit\Domain\Repositories\AuditRepositoryInterface;
 use App\Modules\Url\Application\Services\BulkImportService;
 use App\Modules\Url\Application\Services\UrlService;
 use App\Modules\Url\Domain\Repositories\ProjectRepositoryInterface;
+use App\Modules\Url\Domain\Repositories\UrlRepositoryInterface;
 use App\Modules\Url\Domain\ValueObjects\AuditFrequency;
+use App\Modules\Url\Domain\ValueObjects\AuditStrategy;
 use App\Shared\Exceptions\ValidationException;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -16,22 +19,37 @@ use Twig\Environment;
 
 final readonly class UrlController
 {
+    private const int PER_PAGE = 20;
+
     public function __construct(
         private UrlService $urlService,
         private ProjectRepositoryInterface $projectRepository,
+        private UrlRepositoryInterface $urlRepository,
+        private AuditRepositoryInterface $auditRepository,
         private Environment $twig,
         private BulkImportService $bulkImportService,
     ) {
     }
 
-    public function index(): Response
+    public function index(Request $request): Response
     {
-        $urls = $this->urlService->findAll();
-        $projects = $this->projectRepository->findAll();
+        $page = max(1, (int) $request->query->get('page', 1));
+        $search = trim($request->query->getString('search'));
+
+        $total = $this->urlRepository->countForSearch($search);
+        $urls = $this->urlRepository->findPaginated($page, self::PER_PAGE, $search);
+        $totalPages = (int) ceil($total / self::PER_PAGE);
+
+        $urlIds = array_filter(array_map(static fn ($u) => $u->getId(), $urls), static fn (?int $id): bool => $id !== null);
+        $latestScores = $this->auditRepository->findLatestScoresByUrlIds(array_values($urlIds));
 
         $html = $this->twig->render('urls/index.twig', [
             'urls' => $urls,
-            'projects' => $projects,
+            'latestScores' => $latestScores,
+            'search' => $search,
+            'currentPage' => $page,
+            'totalPages' => $totalPages,
+            'total' => $total,
         ]);
 
         return new Response($html);
@@ -44,6 +62,7 @@ final readonly class UrlController
         $html = $this->twig->render('urls/create.twig', [
             'projects' => $projects,
             'frequencies' => AuditFrequency::cases(),
+            'auditStrategies' => AuditStrategy::cases(),
         ]);
 
         return new Response($html);
@@ -62,6 +81,7 @@ final readonly class UrlController
                 name: (string) $request->request->get('name', ''),
                 frequency: (string) $request->request->get('audit_frequency', 'weekly'),
                 projectId: $projectId !== null && $projectId !== '' ? (int) $projectId : null,
+                auditStrategy: (string) $request->request->get('audit_strategy', 'both'),
                 alertsEnabled: $request->request->getBoolean('alerts_enabled', false),
                 alertThresholdScore: $thresholdScore !== null && $thresholdScore !== '' ? (int) $thresholdScore : null,
                 alertThresholdDrop: $thresholdDrop !== null && $thresholdDrop !== '' ? (int) $thresholdDrop : null,
@@ -75,6 +95,7 @@ final readonly class UrlController
                 'error' => $e->getMessage(),
                 'projects' => $projects,
                 'frequencies' => AuditFrequency::cases(),
+                'auditStrategies' => AuditStrategy::cases(),
                 'old' => $request->request->all(),
             ]);
 
@@ -96,6 +117,7 @@ final readonly class UrlController
             'url' => $url,
             'projects' => $projects,
             'frequencies' => AuditFrequency::cases(),
+            'auditStrategies' => AuditStrategy::cases(),
         ]);
 
         return new Response($html);
@@ -113,6 +135,7 @@ final readonly class UrlController
                 id: $id,
                 name: (string) $request->request->get('name', ''),
                 frequency: (string) $request->request->get('audit_frequency', 'weekly'),
+                auditStrategy: (string) $request->request->get('audit_strategy', 'both'),
                 enabled: $request->request->getBoolean('enabled', true),
                 projectId: $projectId !== null && $projectId !== '' ? (int) $projectId : null,
                 alertsEnabled: $request->request->getBoolean('alerts_enabled', false),
@@ -137,6 +160,7 @@ final readonly class UrlController
                 'url' => $url,
                 'projects' => $projects,
                 'frequencies' => AuditFrequency::cases(),
+                'auditStrategies' => AuditStrategy::cases(),
             ]);
 
             return new Response($html, 422);

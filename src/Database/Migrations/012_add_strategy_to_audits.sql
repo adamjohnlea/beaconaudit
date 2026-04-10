@@ -1,0 +1,1 @@
+ALTER TABLE audits ADD COLUMN strategy TEXT NOT NULL DEFAULT 'desktop';

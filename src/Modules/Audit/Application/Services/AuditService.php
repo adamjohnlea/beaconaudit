@@ -13,13 +13,16 @@ use App\Modules\Audit\Domain\ValueObjects\AccessibilityScore;
 use App\Modules\Audit\Domain\ValueObjects\AuditStatus;
 use App\Modules\Audit\Domain\ValueObjects\IssueCategory;
 use App\Modules\Audit\Domain\ValueObjects\IssueSeverity;
+use App\Modules\Audit\Domain\ValueObjects\RunStrategy;
 use App\Modules\Audit\Infrastructure\Api\ApiException;
 use App\Modules\Audit\Infrastructure\Api\ApiResponse;
 use App\Modules\Audit\Infrastructure\Api\PageSpeedClientInterface;
 use App\Modules\Audit\Infrastructure\Api\RateLimitException;
 use App\Modules\Audit\Infrastructure\RateLimiting\RetryStrategy;
 use App\Modules\Notification\Application\Services\AlertNotifier;
+use App\Modules\Url\Domain\Models\Url;
 use App\Modules\Url\Domain\Repositories\UrlRepositoryInterface;
+use App\Modules\Url\Domain\ValueObjects\AuditStrategy;
 use App\Shared\Exceptions\ValidationException;
 use DateTimeImmutable;
 
@@ -37,7 +40,10 @@ final readonly class AuditService implements AuditServiceInterface
     ) {
     }
 
-    public function runAudit(int $urlId): Audit
+    /**
+     * @return array<Audit>
+     */
+    public function runAudit(int $urlId): array
     {
         $url = $this->urlRepository->findById($urlId);
 
@@ -45,12 +51,33 @@ final readonly class AuditService implements AuditServiceInterface
             throw new ValidationException('URL not found');
         }
 
+        $strategies = match ($url->getAuditStrategy()) {
+            AuditStrategy::DESKTOP => [RunStrategy::DESKTOP],
+            AuditStrategy::MOBILE => [RunStrategy::MOBILE],
+            AuditStrategy::BOTH => [RunStrategy::DESKTOP, RunStrategy::MOBILE],
+        };
+
+        $results = [];
+        foreach ($strategies as $strategy) {
+            $results[] = $this->runSingleAudit($url, $strategy);
+        }
+
+        $url->setLastAuditedAt(new DateTimeImmutable());
+        $url->setUpdatedAt(new DateTimeImmutable());
+        $this->urlRepository->update($url);
+
+        return $results;
+    }
+
+    private function runSingleAudit(Url $url, RunStrategy $strategy): Audit
+    {
         $now = new DateTimeImmutable();
         $audit = new Audit(
             id: null,
-            urlId: $urlId,
+            urlId: $url->getId() ?? 0,
             score: new AccessibilityScore(0),
             status: AuditStatus::IN_PROGRESS,
+            strategy: $strategy,
             auditDate: $now,
             rawResponse: null,
             errorMessage: null,
@@ -61,7 +88,7 @@ final readonly class AuditService implements AuditServiceInterface
         $audit = $this->auditRepository->save($audit);
 
         try {
-            $apiResponse = $this->executeWithRetry($url->getUrl()->getValue(), $audit);
+            $apiResponse = $this->executeWithRetry($url->getUrl()->getValue(), $strategy, $audit);
 
             $audit->setScore(new AccessibilityScore($apiResponse->getScore()));
             $audit->setStatus(AuditStatus::COMPLETED);
@@ -70,17 +97,18 @@ final readonly class AuditService implements AuditServiceInterface
 
             $this->extractAndSaveIssues($audit, $apiResponse);
 
-            $previousAudit = $this->findPreviousAudit($audit);
-            if ($previousAudit !== null) {
+            $previousAudit = $this->auditRepository->findLatestCompletedByUrlIdAndStrategy(
+                $url->getId() ?? 0,
+                $strategy,
+            );
+
+            if ($previousAudit !== null && $previousAudit->getId() !== $audit->getId()) {
                 $comparison = $this->comparisonService->compare($audit, $previousAudit);
                 $this->comparisonRepository->save($comparison);
+                $this->alertNotifier?->notifyIfThresholdBreached($url, $audit, $previousAudit);
+            } else {
+                $this->alertNotifier?->notifyIfThresholdBreached($url, $audit, null);
             }
-
-            $this->alertNotifier?->notifyIfThresholdBreached($url, $audit, $previousAudit);
-
-            $url->setLastAuditedAt(new DateTimeImmutable());
-            $url->setUpdatedAt(new DateTimeImmutable());
-            $this->urlRepository->update($url);
         } catch (ApiException $e) {
             $audit->setStatus(AuditStatus::FAILED);
             $audit->setErrorMessage($e->getMessage());
@@ -90,27 +118,16 @@ final readonly class AuditService implements AuditServiceInterface
         return $audit;
     }
 
-    private function findPreviousAudit(Audit $audit): ?Audit
-    {
-        $previousAudit = $this->auditRepository->findLatestByUrlId($audit->getUrlId());
-
-        if ($previousAudit === null || $previousAudit->getId() === $audit->getId()) {
-            return null;
-        }
-
-        return $previousAudit;
-    }
-
     /**
      * @throws ApiException
      */
-    private function executeWithRetry(string $url, Audit $audit): ApiResponse
+    private function executeWithRetry(string $url, RunStrategy $strategy, Audit $audit): ApiResponse
     {
         $lastException = null;
 
         while ($this->retryStrategy->shouldRetry($audit->getRetryCount())) {
             try {
-                return $this->pageSpeedClient->runAudit($url);
+                return $this->pageSpeedClient->runAudit($url, $strategy->value);
             } catch (RateLimitException $e) {
                 $lastException = $e;
                 $audit->incrementRetryCount();

@@ -10,5 +10,5 @@ interface PageSpeedClientInterface
      * @throws ApiException
      * @throws RateLimitException
      */
-    public function runAudit(string $url): ApiResponse;
+    public function runAudit(string $url, string $strategy = 'desktop'): ApiResponse;
 }

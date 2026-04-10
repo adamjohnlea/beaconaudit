@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Tests\Feature;
 
 use App\Http\Controllers\UrlController;
+use App\Modules\Audit\Infrastructure\Repositories\SqliteAuditRepository;
 use App\Modules\Url\Application\Services\BulkImportService;
 use App\Modules\Url\Application\Services\UrlService;
 use App\Modules\Url\Infrastructure\Repositories\SqliteProjectRepository;
@@ -26,6 +27,7 @@ final class BulkImportTest extends TestCase
 
         $this->urlRepository = new SqliteUrlRepository($this->database);
         $projectRepository = new SqliteProjectRepository($this->database);
+        $auditRepository = new SqliteAuditRepository($this->database);
         $urlService = new UrlService($this->urlRepository);
         $bulkImportService = new BulkImportService($this->urlRepository);
 
@@ -34,7 +36,7 @@ final class BulkImportTest extends TestCase
         $twig->addGlobal('currentUser', null);
         $twig->addGlobal('csrf_token', 'test-csrf-token');
 
-        $this->controller = new UrlController($urlService, $projectRepository, $twig, $bulkImportService);
+        $this->controller = new UrlController($urlService, $projectRepository, $this->urlRepository, $auditRepository, $twig, $bulkImportService);
     }
 
     public function test_bulk_import_page_returns_200(): void

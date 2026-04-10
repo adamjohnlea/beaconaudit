@@ -10,10 +10,12 @@ use App\Modules\Audit\Domain\ValueObjects\AccessibilityScore;
 use App\Modules\Audit\Domain\ValueObjects\AuditStatus;
 use App\Modules\Audit\Domain\ValueObjects\IssueCategory;
 use App\Modules\Audit\Domain\ValueObjects\IssueSeverity;
+use App\Modules\Audit\Domain\ValueObjects\RunStrategy;
 use App\Modules\Audit\Infrastructure\Repositories\SqliteAuditRepository;
 use App\Modules\Audit\Infrastructure\Repositories\SqliteIssueRepository;
 use App\Modules\Url\Domain\Models\Url;
 use App\Modules\Url\Domain\ValueObjects\AuditFrequency;
+use App\Modules\Url\Domain\ValueObjects\AuditStrategy;
 use App\Modules\Url\Domain\ValueObjects\UrlAddress;
 use App\Modules\Url\Infrastructure\Repositories\SqliteUrlRepository;
 use DateTimeImmutable;
@@ -116,6 +118,7 @@ final class SqliteIssueRepositoryTest extends TestCase
             url: new UrlAddress('https://example-' . uniqid() . '.com'),
             name: 'Test',
             auditFrequency: AuditFrequency::WEEKLY,
+            auditStrategy: AuditStrategy::BOTH,
             enabled: true,
             alertsEnabled: false,
             alertThresholdScore: null,
@@ -131,6 +134,7 @@ final class SqliteIssueRepositoryTest extends TestCase
             urlId: $savedUrl->getId() ?? 0,
             score: new AccessibilityScore(85),
             status: AuditStatus::COMPLETED,
+            strategy: RunStrategy::DESKTOP,
             auditDate: $now,
             rawResponse: null,
             errorMessage: null,

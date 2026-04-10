@@ -7,11 +7,13 @@ namespace Tests\Unit\Modules\Dashboard;
 use App\Modules\Audit\Domain\Models\Audit;
 use App\Modules\Audit\Domain\ValueObjects\AccessibilityScore;
 use App\Modules\Audit\Domain\ValueObjects\AuditStatus;
+use App\Modules\Audit\Domain\ValueObjects\RunStrategy;
 use App\Modules\Dashboard\Application\Services\DashboardStatistics;
 use App\Modules\Dashboard\Domain\ValueObjects\DashboardSummary;
 use App\Modules\Dashboard\Domain\ValueObjects\UrlSummary;
 use App\Modules\Url\Domain\Models\Url;
 use App\Modules\Url\Domain\ValueObjects\AuditFrequency;
+use App\Modules\Url\Domain\ValueObjects\AuditStrategy;
 use App\Modules\Url\Domain\ValueObjects\UrlAddress;
 use DateTimeImmutable;
 use PHPUnit\Framework\TestCase;
@@ -152,6 +154,7 @@ final class DashboardStatisticsTest extends TestCase
             url: new UrlAddress($address),
             name: $name,
             auditFrequency: AuditFrequency::WEEKLY,
+            auditStrategy: AuditStrategy::BOTH,
             enabled: true,
             alertsEnabled: false,
             alertThresholdScore: null,
@@ -171,6 +174,7 @@ final class DashboardStatisticsTest extends TestCase
             urlId: 1,
             score: new AccessibilityScore($score),
             status: AuditStatus::COMPLETED,
+            strategy: RunStrategy::DESKTOP,
             auditDate: $auditDate,
             rawResponse: null,
             errorMessage: null,

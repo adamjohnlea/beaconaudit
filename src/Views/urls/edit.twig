@@ -41,6 +41,15 @@
             </select>
         </div>
 
+        <div>
+            <label for="audit_strategy" class="block text-sm font-medium text-text-primary mb-1.5">Audit Strategy</label>
+            <select name="audit_strategy" id="audit_strategy">
+                {% for strategy in auditStrategies %}
+                    <option value="{{ strategy.value }}" {{ url.auditStrategy.value == strategy.value ? 'selected' : '' }}>{{ strategy.label }}</option>
+                {% endfor %}
+            </select>
+        </div>
+
         <div class="flex items-center gap-2">
             <input type="hidden" name="enabled" value="0">
             <input type="checkbox" name="enabled" id="enabled" value="1"

@@ -7,6 +7,7 @@ namespace Tests\Integration\Repositories;
 use App\Modules\Url\Domain\Models\Project;
 use App\Modules\Url\Domain\Models\Url;
 use App\Modules\Url\Domain\ValueObjects\AuditFrequency;
+use App\Modules\Url\Domain\ValueObjects\AuditStrategy;
 use App\Modules\Url\Domain\ValueObjects\ProjectName;
 use App\Modules\Url\Domain\ValueObjects\UrlAddress;
 use App\Modules\Url\Infrastructure\Repositories\SqliteProjectRepository;
@@ -181,6 +182,7 @@ final class SqliteUrlRepositoryTest extends TestCase
             url: new UrlAddress($address),
             name: $name,
             auditFrequency: AuditFrequency::WEEKLY,
+            auditStrategy: AuditStrategy::BOTH,
             enabled: $enabled,
             alertsEnabled: false,
             alertThresholdScore: null,

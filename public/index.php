@@ -120,7 +120,7 @@ if (($config['ses']['access_key'] ?? '') !== '' && ($config['ses']['from_address
     );
 }
 
-$urlController = new UrlController($urlService, $projectRepository, $twig, $bulkImportService);
+$urlController = new UrlController($urlService, $projectRepository, $urlRepository, $auditRepository, $twig, $bulkImportService);
 $projectController = new ProjectController($projectService, $twig);
 $dashboardController = new DashboardController($urlRepository, $auditRepository, $dashboardStatistics, $trendCalculator, $twig, $projectRepository, $issueRepository, $auditService, $auditReportNotifier, $subscriptionRepository);
 $exportController = new ExportController($urlRepository, $auditRepository, $csvExportService, $dashboardStatistics, $projectRepository, $pdfReportDataCollector, $pdfReportService);
@@ -242,7 +242,7 @@ $response = $router->dispatch($request, static function (array $parameters, Requ
         'projects.edit' => $projectController->edit($id ?? 0),
         'projects.update' => $projectController->update($id ?? 0, $request),
         'projects.destroy' => $projectController->destroy($id ?? 0),
-        'urls.index' => $urlController->index(),
+        'urls.index' => $urlController->index($request),
         'urls.create' => $urlController->create(),
         'urls.store' => $urlController->store($request),
         'urls.bulkImport' => $urlController->bulkImport(),

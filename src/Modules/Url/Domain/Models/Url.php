@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Modules\Url\Domain\Models;
 
 use App\Modules\Url\Domain\ValueObjects\AuditFrequency;
+use App\Modules\Url\Domain\ValueObjects\AuditStrategy;
 use App\Modules\Url\Domain\ValueObjects\UrlAddress;
 use DateTimeImmutable;
 
@@ -16,6 +17,7 @@ final class Url
         private UrlAddress $url,
         private ?string $name,
         private AuditFrequency $auditFrequency,
+        private AuditStrategy $auditStrategy,
         private bool $enabled,
         private bool $alertsEnabled,
         private ?int $alertThresholdScore,
@@ -74,6 +76,16 @@ final class Url
     public function setAuditFrequency(AuditFrequency $auditFrequency): void
     {
         $this->auditFrequency = $auditFrequency;
+    }
+
+    public function getAuditStrategy(): AuditStrategy
+    {
+        return $this->auditStrategy;
+    }
+
+    public function setAuditStrategy(AuditStrategy $auditStrategy): void
+    {
+        $this->auditStrategy = $auditStrategy;
     }
 
     public function isEnabled(): bool

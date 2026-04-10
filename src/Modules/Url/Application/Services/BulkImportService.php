@@ -7,6 +7,7 @@ namespace App\Modules\Url\Application\Services;
 use App\Modules\Url\Domain\Models\Url;
 use App\Modules\Url\Domain\Repositories\UrlRepositoryInterface;
 use App\Modules\Url\Domain\ValueObjects\AuditFrequency;
+use App\Modules\Url\Domain\ValueObjects\AuditStrategy;
 use App\Modules\Url\Domain\ValueObjects\BulkImportResult;
 use App\Modules\Url\Domain\ValueObjects\UrlAddress;
 use App\Shared\Exceptions\ValidationException;
@@ -128,6 +129,7 @@ final readonly class BulkImportService
                 url: $urlAddress,
                 name: $row['name'],
                 auditFrequency: $frequency,
+                auditStrategy: AuditStrategy::BOTH,
                 enabled: true,
                 alertsEnabled: false,
                 alertThresholdScore: null,

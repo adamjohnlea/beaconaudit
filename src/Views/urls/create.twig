@@ -45,6 +45,18 @@
         </div>
 
         <div>
+            <label for="audit_strategy" class="block text-sm font-medium text-text-primary mb-1.5">Audit Strategy</label>
+            <select name="audit_strategy" id="audit_strategy">
+                {% for strategy in auditStrategies %}
+                    <option value="{{ strategy.value }}"
+                        {{ old.audit_strategy is defined and old.audit_strategy == strategy.value ? 'selected' : (strategy.value == 'both' and old.audit_strategy is not defined ? 'selected' : '') }}>
+                        {{ strategy.label }}
+                    </option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div>
             <label for="project_id" class="block text-sm font-medium text-text-primary mb-1.5">Project (optional)</label>
             <select name="project_id" id="project_id">
                 <option value="">No project</option>

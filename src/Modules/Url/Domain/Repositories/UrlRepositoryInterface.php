@@ -37,4 +37,11 @@ interface UrlRepositoryInterface
     public function delete(int $id): void;
 
     public function findByUrl(string $url): ?Url;
+
+    /**
+     * @return array<Url>
+     */
+    public function findPaginated(int $page, int $perPage, string $search = ''): array;
+
+    public function countForSearch(string $search = ''): int;
 }

@@ -1,0 +1,1 @@
+ALTER TABLE urls ADD COLUMN audit_strategy TEXT NOT NULL DEFAULT 'both';

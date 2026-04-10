@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Modules\Audit\Domain\Repositories;
 
 use App\Modules\Audit\Domain\Models\Audit;
+use App\Modules\Audit\Domain\ValueObjects\RunStrategy;
 
 interface AuditRepositoryInterface
 {
@@ -20,4 +21,12 @@ interface AuditRepositoryInterface
     public function findByUrlId(int $urlId): array;
 
     public function findLatestByUrlId(int $urlId): ?Audit;
+
+    public function findLatestCompletedByUrlIdAndStrategy(int $urlId, RunStrategy $strategy): ?Audit;
+
+    /**
+     * @param  array<int>                     $urlIds
+     * @return array<int, array<string, int>>
+     */
+    public function findLatestScoresByUrlIds(array $urlIds): array;
 }

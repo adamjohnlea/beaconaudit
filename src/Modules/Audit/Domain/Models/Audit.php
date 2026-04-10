@@ -6,6 +6,7 @@ namespace App\Modules\Audit\Domain\Models;
 
 use App\Modules\Audit\Domain\ValueObjects\AccessibilityScore;
 use App\Modules\Audit\Domain\ValueObjects\AuditStatus;
+use App\Modules\Audit\Domain\ValueObjects\RunStrategy;
 use DateTimeImmutable;
 
 final class Audit
@@ -18,6 +19,7 @@ final class Audit
         private int $urlId,
         private AccessibilityScore $score,
         private AuditStatus $status,
+        private RunStrategy $strategy,
         private DateTimeImmutable $auditDate,
         private ?string $rawResponse,
         private ?string $errorMessage,
@@ -59,6 +61,11 @@ final class Audit
     public function setStatus(AuditStatus $status): void
     {
         $this->status = $status;
+    }
+
+    public function getStrategy(): RunStrategy
+    {
+        return $this->strategy;
     }
 
     public function getAuditDate(): DateTimeImmutable

@@ -7,6 +7,7 @@ namespace Tests\Unit\Modules\Notification;
 use App\Modules\Audit\Domain\Models\Audit;
 use App\Modules\Audit\Domain\ValueObjects\AccessibilityScore;
 use App\Modules\Audit\Domain\ValueObjects\AuditStatus;
+use App\Modules\Audit\Domain\ValueObjects\RunStrategy;
 use App\Modules\Auth\Domain\Models\User;
 use App\Modules\Auth\Domain\ValueObjects\EmailAddress;
 use App\Modules\Auth\Domain\ValueObjects\HashedPassword;
@@ -16,6 +17,7 @@ use App\Modules\Notification\Application\Services\EmailServiceInterface;
 use App\Modules\Notification\Domain\Repositories\EmailSubscriptionRepositoryInterface;
 use App\Modules\Url\Domain\Models\Url;
 use App\Modules\Url\Domain\ValueObjects\AuditFrequency;
+use App\Modules\Url\Domain\ValueObjects\AuditStrategy;
 use App\Modules\Url\Domain\ValueObjects\UrlAddress;
 use DateTimeImmutable;
 use PHPUnit\Framework\Attributes\Test;
@@ -255,6 +257,7 @@ final class AlertNotifierTest extends TestCase
             url: new UrlAddress('https://example.com'),
             name: 'Example',
             auditFrequency: AuditFrequency::WEEKLY,
+            auditStrategy: AuditStrategy::BOTH,
             enabled: true,
             alertsEnabled: $alertsEnabled,
             alertThresholdScore: $thresholdScore,
@@ -274,6 +277,7 @@ final class AlertNotifierTest extends TestCase
             urlId: $urlId,
             score: new AccessibilityScore($score),
             status: AuditStatus::COMPLETED,
+            strategy: RunStrategy::DESKTOP,
             auditDate: $now,
             rawResponse: null,
             errorMessage: null,

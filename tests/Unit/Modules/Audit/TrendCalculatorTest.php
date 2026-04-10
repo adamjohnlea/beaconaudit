@@ -8,6 +8,7 @@ use App\Modules\Audit\Application\Services\TrendCalculator;
 use App\Modules\Audit\Domain\Models\Audit;
 use App\Modules\Audit\Domain\ValueObjects\AccessibilityScore;
 use App\Modules\Audit\Domain\ValueObjects\AuditStatus;
+use App\Modules\Audit\Domain\ValueObjects\RunStrategy;
 use App\Modules\Audit\Domain\ValueObjects\Trend;
 use DateTimeImmutable;
 use PHPUnit\Framework\TestCase;
@@ -142,6 +143,7 @@ final class TrendCalculatorTest extends TestCase
             urlId: 1,
             score: new AccessibilityScore($score),
             status: AuditStatus::COMPLETED,
+            strategy: RunStrategy::DESKTOP,
             auditDate: $auditDate,
             rawResponse: null,
             errorMessage: null,

@@ -12,12 +12,14 @@ use App\Modules\Audit\Domain\ValueObjects\AccessibilityScore;
 use App\Modules\Audit\Domain\ValueObjects\AuditStatus;
 use App\Modules\Audit\Domain\ValueObjects\IssueCategory;
 use App\Modules\Audit\Domain\ValueObjects\IssueSeverity;
+use App\Modules\Audit\Domain\ValueObjects\RunStrategy;
 use App\Modules\Dashboard\Application\Services\DashboardStatistics;
 use App\Modules\Reporting\Application\Services\PdfReportDataCollector;
 use App\Modules\Url\Domain\Models\Project;
 use App\Modules\Url\Domain\Models\Url;
 use App\Modules\Url\Domain\Repositories\UrlRepositoryInterface;
 use App\Modules\Url\Domain\ValueObjects\AuditFrequency;
+use App\Modules\Url\Domain\ValueObjects\AuditStrategy;
 use App\Modules\Url\Domain\ValueObjects\ProjectName;
 use App\Modules\Url\Domain\ValueObjects\UrlAddress;
 use DateTimeImmutable;
@@ -203,6 +205,7 @@ final class PdfReportDataCollectorTest extends TestCase
             url: new UrlAddress($address),
             name: $name,
             auditFrequency: AuditFrequency::WEEKLY,
+            auditStrategy: AuditStrategy::BOTH,
             enabled: true,
             alertsEnabled: false,
             alertThresholdScore: null,
@@ -220,6 +223,7 @@ final class PdfReportDataCollectorTest extends TestCase
             urlId: $urlId,
             score: new AccessibilityScore($score),
             status: AuditStatus::COMPLETED,
+            strategy: RunStrategy::DESKTOP,
             auditDate: new DateTimeImmutable(),
             rawResponse: null,
             errorMessage: null,

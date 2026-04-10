@@ -11,6 +11,7 @@ use App\Modules\Audit\Domain\ValueObjects\AccessibilityScore;
 use App\Modules\Audit\Domain\ValueObjects\AuditStatus;
 use App\Modules\Audit\Domain\ValueObjects\IssueCategory;
 use App\Modules\Audit\Domain\ValueObjects\IssueSeverity;
+use App\Modules\Audit\Domain\ValueObjects\RunStrategy;
 use App\Modules\Audit\Domain\ValueObjects\Trend;
 use DateTimeImmutable;
 use PHPUnit\Framework\TestCase;
@@ -177,6 +178,7 @@ final class ComparisonServiceTest extends TestCase
             urlId: 1,
             score: new AccessibilityScore($score),
             status: AuditStatus::COMPLETED,
+            strategy: RunStrategy::DESKTOP,
             auditDate: $now,
             rawResponse: null,
             errorMessage: null,

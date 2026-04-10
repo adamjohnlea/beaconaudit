@@ -8,5 +8,8 @@ use App\Modules\Audit\Domain\Models\Audit;
 
 interface AuditServiceInterface
 {
-    public function runAudit(int $urlId): Audit;
+    /**
+     * @return array<Audit>
+     */
+    public function runAudit(int $urlId): array;
 }

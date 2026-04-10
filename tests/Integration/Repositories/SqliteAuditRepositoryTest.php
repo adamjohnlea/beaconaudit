@@ -7,9 +7,11 @@ namespace Tests\Integration\Repositories;
 use App\Modules\Audit\Domain\Models\Audit;
 use App\Modules\Audit\Domain\ValueObjects\AccessibilityScore;
 use App\Modules\Audit\Domain\ValueObjects\AuditStatus;
+use App\Modules\Audit\Domain\ValueObjects\RunStrategy;
 use App\Modules\Audit\Infrastructure\Repositories\SqliteAuditRepository;
 use App\Modules\Url\Domain\Models\Url;
 use App\Modules\Url\Domain\ValueObjects\AuditFrequency;
+use App\Modules\Url\Domain\ValueObjects\AuditStrategy;
 use App\Modules\Url\Domain\ValueObjects\UrlAddress;
 use App\Modules\Url\Infrastructure\Repositories\SqliteUrlRepository;
 use DateTimeImmutable;
@@ -128,6 +130,7 @@ final class SqliteAuditRepositoryTest extends TestCase
             url: new UrlAddress('https://example-' . uniqid() . '.com'),
             name: 'Test',
             auditFrequency: AuditFrequency::WEEKLY,
+            auditStrategy: AuditStrategy::BOTH,
             enabled: true,
             alertsEnabled: false,
             alertThresholdScore: null,
@@ -155,6 +158,7 @@ final class SqliteAuditRepositoryTest extends TestCase
             urlId: $urlId,
             score: new AccessibilityScore($score),
             status: $status,
+            strategy: RunStrategy::DESKTOP,
             auditDate: $now,
             rawResponse: null,
             errorMessage: null,

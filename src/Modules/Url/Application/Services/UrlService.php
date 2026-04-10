@@ -7,6 +7,7 @@ namespace App\Modules\Url\Application\Services;
 use App\Modules\Url\Domain\Models\Url;
 use App\Modules\Url\Domain\Repositories\UrlRepositoryInterface;
 use App\Modules\Url\Domain\ValueObjects\AuditFrequency;
+use App\Modules\Url\Domain\ValueObjects\AuditStrategy;
 use App\Modules\Url\Domain\ValueObjects\UrlAddress;
 use App\Shared\Exceptions\ValidationException;
 use DateTimeImmutable;
@@ -23,6 +24,7 @@ final readonly class UrlService
         string $name,
         string $frequency,
         ?int $projectId = null,
+        string $auditStrategy = 'both',
         bool $alertsEnabled = false,
         ?int $alertThresholdScore = null,
         ?int $alertThresholdDrop = null,
@@ -35,6 +37,7 @@ final readonly class UrlService
         }
 
         $auditFrequency = $this->resolveFrequency($frequency);
+        $resolvedStrategy = $this->resolveAuditStrategy($auditStrategy);
         $this->validateAlertThresholds($alertThresholdScore, $alertThresholdDrop);
         $now = new DateTimeImmutable();
 
@@ -44,6 +47,7 @@ final readonly class UrlService
             url: $urlAddress,
             name: $name,
             auditFrequency: $auditFrequency,
+            auditStrategy: $resolvedStrategy,
             enabled: true,
             alertsEnabled: $alertsEnabled,
             alertThresholdScore: $alertThresholdScore,
@@ -60,6 +64,7 @@ final readonly class UrlService
         int $id,
         ?string $name = null,
         ?string $frequency = null,
+        ?string $auditStrategy = null,
         ?bool $enabled = null,
         ?int $projectId = null,
         ?bool $alertsEnabled = null,
@@ -80,6 +85,10 @@ final readonly class UrlService
 
         if ($frequency !== null) {
             $url->setAuditFrequency($this->resolveFrequency($frequency));
+        }
+
+        if ($auditStrategy !== null) {
+            $url->setAuditStrategy($this->resolveAuditStrategy($auditStrategy));
         }
 
         if ($enabled !== null) {
@@ -127,6 +136,17 @@ final readonly class UrlService
     public function findAll(): array
     {
         return $this->urlRepository->findAll();
+    }
+
+    private function resolveAuditStrategy(string $strategy): AuditStrategy
+    {
+        $resolved = AuditStrategy::tryFrom($strategy);
+
+        if ($resolved === null) {
+            throw new ValidationException('Invalid audit strategy: ' . $strategy);
+        }
+
+        return $resolved;
     }
 
     private function validateAlertThresholds(?int $alertThresholdScore, ?int $alertThresholdDrop): void

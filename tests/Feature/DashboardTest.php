@@ -10,11 +10,13 @@ use App\Modules\Audit\Application\Services\TrendCalculator;
 use App\Modules\Audit\Domain\Models\Audit;
 use App\Modules\Audit\Domain\ValueObjects\AccessibilityScore;
 use App\Modules\Audit\Domain\ValueObjects\AuditStatus;
+use App\Modules\Audit\Domain\ValueObjects\RunStrategy;
 use App\Modules\Audit\Infrastructure\Repositories\SqliteAuditRepository;
 use App\Modules\Dashboard\Application\Services\DashboardStatistics;
 use App\Modules\Url\Domain\Models\Project;
 use App\Modules\Url\Domain\Models\Url;
 use App\Modules\Url\Domain\ValueObjects\AuditFrequency;
+use App\Modules\Url\Domain\ValueObjects\AuditStrategy;
 use App\Modules\Url\Domain\ValueObjects\ProjectName;
 use App\Modules\Url\Domain\ValueObjects\UrlAddress;
 use App\Modules\Url\Infrastructure\Repositories\SqliteProjectRepository;
@@ -157,6 +159,7 @@ final class DashboardTest extends TestCase
             urlId: $urlId,
             score: new AccessibilityScore(85),
             status: AuditStatus::COMPLETED,
+            strategy: RunStrategy::DESKTOP,
             auditDate: $now,
             rawResponse: null,
             errorMessage: null,
@@ -168,7 +171,7 @@ final class DashboardTest extends TestCase
         $auditService->expects($this->once())
             ->method('runAudit')
             ->with($urlId)
-            ->willReturn($audit);
+            ->willReturn([$audit]);
 
         $controller = $this->createControllerWithAuditService($auditService);
 
@@ -231,6 +234,7 @@ final class DashboardTest extends TestCase
             url: new UrlAddress($address),
             name: $name,
             auditFrequency: AuditFrequency::WEEKLY,
+            auditStrategy: AuditStrategy::BOTH,
             enabled: true,
             alertsEnabled: false,
             alertThresholdScore: null,
@@ -251,6 +255,7 @@ final class DashboardTest extends TestCase
             urlId: $urlId,
             score: new AccessibilityScore($score),
             status: AuditStatus::COMPLETED,
+            strategy: RunStrategy::DESKTOP,
             auditDate: $now,
             rawResponse: null,
             errorMessage: null,

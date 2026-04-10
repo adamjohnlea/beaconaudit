@@ -13,6 +13,7 @@ use App\Modules\Audit\Domain\Repositories\AuditRepositoryInterface;
 use App\Modules\Audit\Domain\Repositories\IssueRepositoryInterface;
 use App\Modules\Audit\Domain\ValueObjects\AccessibilityScore;
 use App\Modules\Audit\Domain\ValueObjects\AuditStatus;
+use App\Modules\Audit\Domain\ValueObjects\RunStrategy;
 use App\Modules\Audit\Infrastructure\Api\ApiException;
 use App\Modules\Audit\Infrastructure\Api\ApiResponse;
 use App\Modules\Audit\Infrastructure\Api\PageSpeedClientInterface;
@@ -21,6 +22,7 @@ use App\Modules\Audit\Infrastructure\RateLimiting\RetryStrategy;
 use App\Modules\Url\Domain\Models\Url;
 use App\Modules\Url\Domain\Repositories\UrlRepositoryInterface;
 use App\Modules\Url\Domain\ValueObjects\AuditFrequency;
+use App\Modules\Url\Domain\ValueObjects\AuditStrategy;
 use App\Modules\Url\Domain\ValueObjects\UrlAddress;
 use App\Shared\Exceptions\ValidationException;
 use DateTimeImmutable;
@@ -80,7 +82,8 @@ final class AuditServiceTest extends TestCase
 
         $this->issueRepository->method('saveMany')->willReturnArgument(0);
 
-        $audit = $this->service->runAudit(1);
+        $audits = $this->service->runAudit(1);
+        $audit = $audits[0];
 
         $this->assertSame(85, $audit->getScore()->getValue());
         $this->assertSame(AuditStatus::COMPLETED, $audit->getStatus());
@@ -100,6 +103,7 @@ final class AuditServiceTest extends TestCase
     {
         $url = $this->makeUrl(1);
         $this->urlRepository->method('findById')->with(1)->willReturn($url);
+        $this->urlRepository->method('update')->willReturnArgument(0);
 
         $this->pageSpeedClient->method('runAudit')
             ->willThrowException(new ApiException('API error'));
@@ -118,7 +122,8 @@ final class AuditServiceTest extends TestCase
                 return $audit;
             });
 
-        $audit = $this->service->runAudit(1);
+        $audits = $this->service->runAudit(1);
+        $audit = $audits[0];
 
         $this->assertSame(AuditStatus::FAILED, $audit->getStatus());
         $this->assertSame('API error', $audit->getErrorMessage());
@@ -157,7 +162,8 @@ final class AuditServiceTest extends TestCase
 
         $this->issueRepository->method('saveMany')->willReturnArgument(0);
 
-        $audit = $this->service->runAudit(1);
+        $audits = $this->service->runAudit(1);
+        $audit = $audits[0];
 
         $this->assertSame(AuditStatus::COMPLETED, $audit->getStatus());
         $this->assertSame(90, $audit->getScore()->getValue());
@@ -168,6 +174,7 @@ final class AuditServiceTest extends TestCase
     {
         $url = $this->makeUrl(1);
         $this->urlRepository->method('findById')->with(1)->willReturn($url);
+        $this->urlRepository->method('update')->willReturnArgument(0);
 
         $this->pageSpeedClient->method('runAudit')
             ->willThrowException(new RateLimitException('Rate limit exceeded'));
@@ -185,7 +192,8 @@ final class AuditServiceTest extends TestCase
                 return $audit;
             });
 
-        $audit = $this->service->runAudit(1);
+        $audits = $this->service->runAudit(1);
+        $audit = $audits[0];
 
         $this->assertSame(AuditStatus::FAILED, $audit->getStatus());
         $this->assertStringContainsString('Rate limit exceeded', (string) $audit->getErrorMessage());
@@ -286,6 +294,7 @@ final class AuditServiceTest extends TestCase
             urlId: 1,
             score: new AccessibilityScore(70),
             status: AuditStatus::COMPLETED,
+            strategy: RunStrategy::DESKTOP,
             auditDate: new DateTimeImmutable('-1 week'),
             rawResponse: null,
             errorMessage: null,
@@ -307,8 +316,8 @@ final class AuditServiceTest extends TestCase
             });
 
         $this->auditRepository
-            ->method('findLatestByUrlId')
-            ->with(1)
+            ->method('findLatestCompletedByUrlIdAndStrategy')
+            ->with(1, RunStrategy::DESKTOP)
             ->willReturn($previousAudit);
 
         $this->issueRepository->method('saveMany')->willReturnArgument(0);
@@ -347,7 +356,7 @@ final class AuditServiceTest extends TestCase
             });
 
         $this->auditRepository
-            ->method('findLatestByUrlId')
+            ->method('findLatestCompletedByUrlIdAndStrategy')
             ->willReturn(null);
 
         $this->issueRepository->method('saveMany')->willReturnArgument(0);
@@ -369,6 +378,7 @@ final class AuditServiceTest extends TestCase
             url: new UrlAddress('https://example.com'),
             name: 'Example',
             auditFrequency: AuditFrequency::WEEKLY,
+            auditStrategy: AuditStrategy::DESKTOP,
             enabled: true,
             alertsEnabled: false,
             alertThresholdScore: null,

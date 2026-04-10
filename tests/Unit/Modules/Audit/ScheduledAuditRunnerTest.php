@@ -9,9 +9,11 @@ use App\Modules\Audit\Application\Services\ScheduledAuditRunner;
 use App\Modules\Audit\Domain\Models\Audit;
 use App\Modules\Audit\Domain\ValueObjects\AccessibilityScore;
 use App\Modules\Audit\Domain\ValueObjects\AuditStatus;
+use App\Modules\Audit\Domain\ValueObjects\RunStrategy;
 use App\Modules\Url\Domain\Models\Url;
 use App\Modules\Url\Domain\Repositories\UrlRepositoryInterface;
 use App\Modules\Url\Domain\ValueObjects\AuditFrequency;
+use App\Modules\Url\Domain\ValueObjects\AuditStrategy;
 use App\Modules\Url\Domain\ValueObjects\UrlAddress;
 use DateTimeImmutable;
 use PHPUnit\Framework\MockObject\MockObject;
@@ -43,7 +45,7 @@ final class ScheduledAuditRunnerTest extends TestCase
         $this->auditService
             ->expects($this->exactly(2))
             ->method('runAudit')
-            ->willReturn($this->makeAudit());
+            ->willReturn([$this->makeAudit()]);
 
         $results = $this->runner->run();
 
@@ -80,7 +82,7 @@ final class ScheduledAuditRunnerTest extends TestCase
             ->expects($this->once())
             ->method('runAudit')
             ->with(1)
-            ->willReturn($this->makeAudit());
+            ->willReturn([$this->makeAudit()]);
 
         $results = $this->runner->run();
 
@@ -98,7 +100,7 @@ final class ScheduledAuditRunnerTest extends TestCase
         $this->auditService
             ->expects($this->once())
             ->method('runAudit')
-            ->willReturn($this->makeAudit());
+            ->willReturn([$this->makeAudit()]);
 
         $results = $this->runner->run();
 
@@ -133,12 +135,12 @@ final class ScheduledAuditRunnerTest extends TestCase
 
         $callCount = 0;
         $this->auditService->method('runAudit')
-            ->willReturnCallback(function () use (&$callCount): Audit {
+            ->willReturnCallback(function () use (&$callCount): array {
                 $callCount++;
                 if ($callCount === 1) {
                     throw new \RuntimeException('Audit failed');
                 }
-                return $this->makeAudit();
+                return [$this->makeAudit()];
             });
 
         $results = $this->runner->run();
@@ -156,6 +158,7 @@ final class ScheduledAuditRunnerTest extends TestCase
             url: new UrlAddress('https://example-' . $id . '.com'),
             name: 'Example ' . $id,
             auditFrequency: $frequency,
+            auditStrategy: AuditStrategy::BOTH,
             enabled: true,
             alertsEnabled: false,
             alertThresholdScore: null,
@@ -175,6 +178,7 @@ final class ScheduledAuditRunnerTest extends TestCase
             urlId: 1,
             score: new AccessibilityScore(85),
             status: AuditStatus::COMPLETED,
+            strategy: RunStrategy::DESKTOP,
             auditDate: $now,
             rawResponse: null,
             errorMessage: null,

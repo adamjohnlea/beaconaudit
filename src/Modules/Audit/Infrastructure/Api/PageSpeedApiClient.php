@@ -14,12 +14,12 @@ final readonly class PageSpeedApiClient implements PageSpeedClientInterface
     ) {
     }
 
-    public function runAudit(string $url): ApiResponse
+    public function runAudit(string $url, string $strategy = 'desktop'): ApiResponse
     {
         $params = [
             'url' => $url,
             'category' => 'accessibility',
-            'strategy' => 'desktop',
+            'strategy' => $strategy,
         ];
 
         if ($this->apiKey !== '') {

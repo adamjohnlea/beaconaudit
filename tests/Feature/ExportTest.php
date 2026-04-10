@@ -8,6 +8,7 @@ use App\Http\Controllers\ExportController;
 use App\Modules\Audit\Domain\Models\Audit;
 use App\Modules\Audit\Domain\ValueObjects\AccessibilityScore;
 use App\Modules\Audit\Domain\ValueObjects\AuditStatus;
+use App\Modules\Audit\Domain\ValueObjects\RunStrategy;
 use App\Modules\Audit\Infrastructure\Repositories\SqliteAuditRepository;
 use App\Modules\Audit\Infrastructure\Repositories\SqliteIssueRepository;
 use App\Modules\Dashboard\Application\Services\DashboardStatistics;
@@ -16,6 +17,7 @@ use App\Modules\Reporting\Application\Services\PdfReportDataCollector;
 use App\Modules\Reporting\Application\Services\PdfReportService;
 use App\Modules\Url\Domain\Models\Url;
 use App\Modules\Url\Domain\ValueObjects\AuditFrequency;
+use App\Modules\Url\Domain\ValueObjects\AuditStrategy;
 use App\Modules\Url\Domain\ValueObjects\UrlAddress;
 use App\Modules\Url\Infrastructure\Repositories\SqliteProjectRepository;
 use App\Modules\Url\Infrastructure\Repositories\SqliteUrlRepository;
@@ -99,6 +101,7 @@ final class ExportTest extends TestCase
             url: new UrlAddress($address),
             name: $name,
             auditFrequency: AuditFrequency::WEEKLY,
+            auditStrategy: AuditStrategy::BOTH,
             enabled: true,
             alertsEnabled: false,
             alertThresholdScore: null,
@@ -119,6 +122,7 @@ final class ExportTest extends TestCase
             urlId: $urlId,
             score: new AccessibilityScore($score),
             status: AuditStatus::COMPLETED,
+            strategy: RunStrategy::DESKTOP,
             auditDate: $now,
             rawResponse: null,
             errorMessage: null,

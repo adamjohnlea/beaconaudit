@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Tests\Feature;
 
 use App\Http\Controllers\UrlController;
+use App\Modules\Audit\Infrastructure\Repositories\SqliteAuditRepository;
 use App\Modules\Url\Application\Services\BulkImportService;
 use App\Modules\Url\Application\Services\UrlService;
 use App\Modules\Url\Infrastructure\Repositories\SqliteProjectRepository;
@@ -26,6 +27,7 @@ final class UrlManagementTest extends TestCase
 
         $this->urlRepository = new SqliteUrlRepository($this->database);
         $projectRepository = new SqliteProjectRepository($this->database);
+        $auditRepository = new SqliteAuditRepository($this->database);
         $urlService = new UrlService($this->urlRepository);
         $bulkImportService = new BulkImportService($this->urlRepository);
 
@@ -34,12 +36,12 @@ final class UrlManagementTest extends TestCase
         $twig->addGlobal('currentUser', null);
         $twig->addGlobal('csrf_token', 'test-csrf-token');
 
-        $this->controller = new UrlController($urlService, $projectRepository, $twig, $bulkImportService);
+        $this->controller = new UrlController($urlService, $projectRepository, $this->urlRepository, $auditRepository, $twig, $bulkImportService);
     }
 
     public function test_index_returns_200(): void
     {
-        $response = $this->controller->index();
+        $response = $this->controller->index(new Request());
 
         $this->assertSame(200, $response->getStatusCode());
     }
@@ -48,7 +50,7 @@ final class UrlManagementTest extends TestCase
     {
         $this->createUrlViaStore('https://example.com', 'Example Site');
 
-        $response = $this->controller->index();
+        $response = $this->controller->index(new Request());
 
         $this->assertSame(200, $response->getStatusCode());
         $this->assertStringContainsString('Example Site', (string) $response->getContent());
