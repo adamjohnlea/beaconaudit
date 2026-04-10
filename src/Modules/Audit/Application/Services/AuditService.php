@@ -18,6 +18,7 @@ use App\Modules\Audit\Infrastructure\Api\ApiResponse;
 use App\Modules\Audit\Infrastructure\Api\PageSpeedClientInterface;
 use App\Modules\Audit\Infrastructure\Api\RateLimitException;
 use App\Modules\Audit\Infrastructure\RateLimiting\RetryStrategy;
+use App\Modules\Notification\Application\Services\AlertNotifier;
 use App\Modules\Url\Domain\Repositories\UrlRepositoryInterface;
 use App\Shared\Exceptions\ValidationException;
 use DateTimeImmutable;
@@ -32,6 +33,7 @@ final readonly class AuditService implements AuditServiceInterface
         private RetryStrategy $retryStrategy,
         private ComparisonService $comparisonService,
         private AuditComparisonRepositoryInterface $comparisonRepository,
+        private ?AlertNotifier $alertNotifier = null,
     ) {
     }
 
@@ -68,7 +70,13 @@ final readonly class AuditService implements AuditServiceInterface
 
             $this->extractAndSaveIssues($audit, $apiResponse);
 
-            $this->createComparisonIfPreviousExists($audit);
+            $previousAudit = $this->findPreviousAudit($audit);
+            if ($previousAudit !== null) {
+                $comparison = $this->comparisonService->compare($audit, $previousAudit);
+                $this->comparisonRepository->save($comparison);
+            }
+
+            $this->alertNotifier?->notifyIfThresholdBreached($url, $audit, $previousAudit);
 
             $url->setLastAuditedAt(new DateTimeImmutable());
             $url->setUpdatedAt(new DateTimeImmutable());
@@ -82,16 +90,15 @@ final readonly class AuditService implements AuditServiceInterface
         return $audit;
     }
 
-    private function createComparisonIfPreviousExists(Audit $audit): void
+    private function findPreviousAudit(Audit $audit): ?Audit
     {
         $previousAudit = $this->auditRepository->findLatestByUrlId($audit->getUrlId());
 
         if ($previousAudit === null || $previousAudit->getId() === $audit->getId()) {
-            return;
+            return null;
         }
 
-        $comparison = $this->comparisonService->compare($audit, $previousAudit);
-        $this->comparisonRepository->save($comparison);
+        return $previousAudit;
     }
 
     /**

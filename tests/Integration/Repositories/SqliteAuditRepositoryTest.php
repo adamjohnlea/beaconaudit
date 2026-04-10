@@ -129,6 +129,7 @@ final class SqliteAuditRepositoryTest extends TestCase
             name: 'Test',
             auditFrequency: AuditFrequency::WEEKLY,
             enabled: true,
+            alertsEnabled: false,
             alertThresholdScore: null,
             alertThresholdDrop: null,
             lastAuditedAt: null,

@@ -54,11 +54,17 @@ final readonly class UrlController
         try {
             $projectId = $request->request->get('project_id');
 
+            $thresholdScore = $request->request->get('alert_threshold_score');
+            $thresholdDrop = $request->request->get('alert_threshold_drop');
+
             $this->urlService->create(
                 url: (string) $request->request->get('url', ''),
                 name: (string) $request->request->get('name', ''),
                 frequency: (string) $request->request->get('audit_frequency', 'weekly'),
                 projectId: $projectId !== null && $projectId !== '' ? (int) $projectId : null,
+                alertsEnabled: $request->request->getBoolean('alerts_enabled', false),
+                alertThresholdScore: $thresholdScore !== null && $thresholdScore !== '' ? (int) $thresholdScore : null,
+                alertThresholdDrop: $thresholdDrop !== null && $thresholdDrop !== '' ? (int) $thresholdDrop : null,
             );
 
             return new RedirectResponse('/urls');
@@ -100,12 +106,20 @@ final readonly class UrlController
         try {
             $projectId = $request->request->get('project_id');
 
+            $thresholdScore = $request->request->get('alert_threshold_score');
+            $thresholdDrop = $request->request->get('alert_threshold_drop');
+
             $this->urlService->update(
                 id: $id,
                 name: (string) $request->request->get('name', ''),
                 frequency: (string) $request->request->get('audit_frequency', 'weekly'),
                 enabled: $request->request->getBoolean('enabled', true),
                 projectId: $projectId !== null && $projectId !== '' ? (int) $projectId : null,
+                alertsEnabled: $request->request->getBoolean('alerts_enabled', false),
+                alertThresholdScore: $thresholdScore !== null && $thresholdScore !== '' ? (int) $thresholdScore : null,
+                clearAlertThresholdScore: $thresholdScore === '',
+                alertThresholdDrop: $thresholdDrop !== null && $thresholdDrop !== '' ? (int) $thresholdDrop : null,
+                clearAlertThresholdDrop: $thresholdDrop === '',
             );
 
             return new RedirectResponse('/urls');

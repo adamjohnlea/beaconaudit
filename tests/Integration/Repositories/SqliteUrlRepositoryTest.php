@@ -182,6 +182,7 @@ final class SqliteUrlRepositoryTest extends TestCase
             name: $name,
             auditFrequency: AuditFrequency::WEEKLY,
             enabled: $enabled,
+            alertsEnabled: false,
             alertThresholdScore: null,
             alertThresholdDrop: null,
             lastAuditedAt: null,

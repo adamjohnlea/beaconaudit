@@ -17,6 +17,7 @@ final class Url
         private ?string $name,
         private AuditFrequency $auditFrequency,
         private bool $enabled,
+        private bool $alertsEnabled,
         private ?int $alertThresholdScore,
         private ?int $alertThresholdDrop,
         private ?DateTimeImmutable $lastAuditedAt,
@@ -83,6 +84,16 @@ final class Url
     public function setEnabled(bool $enabled): void
     {
         $this->enabled = $enabled;
+    }
+
+    public function isAlertsEnabled(): bool
+    {
+        return $this->alertsEnabled;
+    }
+
+    public function setAlertsEnabled(bool $alertsEnabled): void
+    {
+        $this->alertsEnabled = $alertsEnabled;
     }
 
     public function getAlertThresholdScore(): ?int

@@ -370,6 +370,7 @@ final class AuditServiceTest extends TestCase
             name: 'Example',
             auditFrequency: AuditFrequency::WEEKLY,
             enabled: true,
+            alertsEnabled: false,
             alertThresholdScore: null,
             alertThresholdDrop: null,
             lastAuditedAt: null,

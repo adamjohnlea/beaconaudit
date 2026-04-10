@@ -100,6 +100,7 @@ final class ExportTest extends TestCase
             name: $name,
             auditFrequency: AuditFrequency::WEEKLY,
             enabled: true,
+            alertsEnabled: false,
             alertThresholdScore: null,
             alertThresholdDrop: null,
             lastAuditedAt: null,

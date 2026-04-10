@@ -41,6 +41,14 @@
             </select>
         </div>
 
+        <div class="flex items-center gap-2">
+            <input type="hidden" name="enabled" value="0">
+            <input type="checkbox" name="enabled" id="enabled" value="1"
+                   {{ url.enabled ? 'checked' : '' }}
+                   class="h-4 w-4 rounded border-border text-accent focus:ring-text-secondary">
+            <label for="enabled" class="text-sm text-text-primary">Include in scheduled audits</label>
+        </div>
+
         <div>
             <label for="project_id" class="block text-sm font-medium text-text-primary mb-1.5">Project (optional)</label>
             <select name="project_id" id="project_id">
@@ -51,12 +59,48 @@
             </select>
         </div>
 
-        <div class="flex items-center gap-2">
-            <input type="hidden" name="enabled" value="0">
-            <input type="checkbox" name="enabled" id="enabled" value="1"
-                   {{ url.enabled ? 'checked' : '' }}
-                   class="h-4 w-4 rounded border-border text-accent focus:ring-text-secondary">
-            <label for="enabled" class="text-sm text-text-primary">Enabled</label>
+        <div class="border border-border rounded-lg p-4 space-y-4" x-data="{ alertsEnabled: {{ url.alertsEnabled ? 'true' : 'false' }} }">
+            <div class="flex items-center gap-2">
+                <input type="hidden" name="alerts_enabled" value="0">
+                <input type="checkbox" name="alerts_enabled" id="alerts_enabled" value="1"
+                       {{ url.alertsEnabled ? 'checked' : '' }}
+                       x-model="alertsEnabled"
+                       class="h-4 w-4 rounded border-border text-accent focus:ring-text-secondary">
+                <label for="alerts_enabled" class="text-sm font-medium text-text-primary">Enable score alerts</label>
+            </div>
+            <p class="text-xs text-text-muted -mt-1">Send an email alert to project subscribers when a threshold is breached.</p>
+
+            <div x-show="alertsEnabled" x-cloak class="space-y-4 pt-1">
+                <div>
+                    <label for="alert_threshold_score" class="block text-sm font-medium text-text-primary mb-1.5">
+                        Alert when score falls at or below
+                    </label>
+                    <div class="flex items-center gap-2">
+                        <input type="number" name="alert_threshold_score" id="alert_threshold_score"
+                               min="0" max="100"
+                               value="{{ url.alertThresholdScore }}"
+                               placeholder="e.g. 70"
+                               class="w-28">
+                        <span class="text-sm text-text-muted">/ 100</span>
+                    </div>
+                    <p class="text-xs text-text-muted mt-1">Leave blank to disable this check.</p>
+                </div>
+
+                <div>
+                    <label for="alert_threshold_drop" class="block text-sm font-medium text-text-primary mb-1.5">
+                        Alert when score drops by
+                    </label>
+                    <div class="flex items-center gap-2">
+                        <input type="number" name="alert_threshold_drop" id="alert_threshold_drop"
+                               min="1" max="100"
+                               value="{{ url.alertThresholdDrop }}"
+                               placeholder="e.g. 10"
+                               class="w-28">
+                        <span class="text-sm text-text-muted">points or more</span>
+                    </div>
+                    <p class="text-xs text-text-muted mt-1">Leave blank to disable this check.</p>
+                </div>
+            </div>
         </div>
 
         <div class="flex justify-end gap-3 pt-2">

@@ -23,6 +23,9 @@ final readonly class UrlService
         string $name,
         string $frequency,
         ?int $projectId = null,
+        bool $alertsEnabled = false,
+        ?int $alertThresholdScore = null,
+        ?int $alertThresholdDrop = null,
     ): Url {
         $urlAddress = new UrlAddress($url);
 
@@ -32,6 +35,7 @@ final readonly class UrlService
         }
 
         $auditFrequency = $this->resolveFrequency($frequency);
+        $this->validateAlertThresholds($alertThresholdScore, $alertThresholdDrop);
         $now = new DateTimeImmutable();
 
         $urlModel = new Url(
@@ -41,8 +45,9 @@ final readonly class UrlService
             name: $name,
             auditFrequency: $auditFrequency,
             enabled: true,
-            alertThresholdScore: null,
-            alertThresholdDrop: null,
+            alertsEnabled: $alertsEnabled,
+            alertThresholdScore: $alertThresholdScore,
+            alertThresholdDrop: $alertThresholdDrop,
             lastAuditedAt: null,
             createdAt: $now,
             updatedAt: $now,
@@ -57,6 +62,11 @@ final readonly class UrlService
         ?string $frequency = null,
         ?bool $enabled = null,
         ?int $projectId = null,
+        ?bool $alertsEnabled = null,
+        ?int $alertThresholdScore = null,
+        bool $clearAlertThresholdScore = false,
+        ?int $alertThresholdDrop = null,
+        bool $clearAlertThresholdDrop = false,
     ): Url {
         $url = $this->urlRepository->findById($id);
 
@@ -79,6 +89,16 @@ final readonly class UrlService
         if ($projectId !== null) {
             $url->setProjectId($projectId);
         }
+
+        if ($alertsEnabled !== null) {
+            $url->setAlertsEnabled($alertsEnabled);
+        }
+
+        $resolvedThresholdScore = $clearAlertThresholdScore ? null : ($alertThresholdScore ?? $url->getAlertThresholdScore());
+        $resolvedThresholdDrop = $clearAlertThresholdDrop ? null : ($alertThresholdDrop ?? $url->getAlertThresholdDrop());
+        $this->validateAlertThresholds($resolvedThresholdScore, $resolvedThresholdDrop);
+        $url->setAlertThresholdScore($resolvedThresholdScore);
+        $url->setAlertThresholdDrop($resolvedThresholdDrop);
 
         $url->setUpdatedAt(new DateTimeImmutable());
 
@@ -107,6 +127,17 @@ final readonly class UrlService
     public function findAll(): array
     {
         return $this->urlRepository->findAll();
+    }
+
+    private function validateAlertThresholds(?int $alertThresholdScore, ?int $alertThresholdDrop): void
+    {
+        if ($alertThresholdScore !== null && ($alertThresholdScore < 0 || $alertThresholdScore > 100)) {
+            throw new ValidationException('Alert threshold score must be between 0 and 100.');
+        }
+
+        if ($alertThresholdDrop !== null && ($alertThresholdDrop < 1 || $alertThresholdDrop > 100)) {
+            throw new ValidationException('Alert threshold drop must be between 1 and 100.');
+        }
     }
 
     private function resolveFrequency(string $frequency): AuditFrequency

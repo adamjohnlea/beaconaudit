@@ -21,14 +21,15 @@ final readonly class SqliteUrlRepository implements UrlRepositoryInterface
     public function save(Url $url): Url
     {
         $this->database->query(
-            'INSERT INTO urls (project_id, url, name, audit_frequency, enabled, alert_threshold_score, alert_threshold_drop, last_audited_at, created_at, updated_at)
-             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+            'INSERT INTO urls (project_id, url, name, audit_frequency, enabled, alerts_enabled, alert_threshold_score, alert_threshold_drop, last_audited_at, created_at, updated_at)
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
             [
                 $url->getProjectId(),
                 $url->getUrl()->getValue(),
                 $url->getName(),
                 $url->getAuditFrequency()->value,
                 $url->isEnabled() ? 1 : 0,
+                $url->isAlertsEnabled() ? 1 : 0,
                 $url->getAlertThresholdScore(),
                 $url->getAlertThresholdDrop(),
                 $url->getLastAuditedAt()?->format('Y-m-d H:i:s'),
@@ -48,7 +49,7 @@ final readonly class SqliteUrlRepository implements UrlRepositoryInterface
     public function update(Url $url): Url
     {
         $this->database->query(
-            'UPDATE urls SET project_id = ?, url = ?, name = ?, audit_frequency = ?, enabled = ?, alert_threshold_score = ?, alert_threshold_drop = ?, last_audited_at = ?, updated_at = ?
+            'UPDATE urls SET project_id = ?, url = ?, name = ?, audit_frequency = ?, enabled = ?, alerts_enabled = ?, alert_threshold_score = ?, alert_threshold_drop = ?, last_audited_at = ?, updated_at = ?
              WHERE id = ?',
             [
                 $url->getProjectId(),
@@ -56,6 +57,7 @@ final readonly class SqliteUrlRepository implements UrlRepositoryInterface
                 $url->getName(),
                 $url->getAuditFrequency()->value,
                 $url->isEnabled() ? 1 : 0,
+                $url->isAlertsEnabled() ? 1 : 0,
                 $url->getAlertThresholdScore(),
                 $url->getAlertThresholdDrop(),
                 $url->getLastAuditedAt()?->format('Y-m-d H:i:s'),
@@ -71,7 +73,7 @@ final readonly class SqliteUrlRepository implements UrlRepositoryInterface
     {
         $stmt = $this->database->query('SELECT * FROM urls WHERE id = ?', [$id]);
 
-        /** @var array{id: string|int, project_id: string|int|null, url: string, name: string|null, audit_frequency: string, enabled: string|int, alert_threshold_score: string|int|null, alert_threshold_drop: string|int|null, last_audited_at: string|null, created_at: string, updated_at: string}|false $row */
+        /** @var array{id: string|int, project_id: string|int|null, url: string, name: string|null, audit_frequency: string, enabled: string|int, alerts_enabled: string|int, alert_threshold_score: string|int|null, alert_threshold_drop: string|int|null, last_audited_at: string|null, created_at: string, updated_at: string}|false $row */
         $row = $stmt->fetch();
 
         if ($row === false) {
@@ -88,7 +90,7 @@ final readonly class SqliteUrlRepository implements UrlRepositoryInterface
     {
         $stmt = $this->database->query('SELECT * FROM urls ORDER BY name ASC');
 
-        /** @var array<array{id: string|int, project_id: string|int|null, url: string, name: string|null, audit_frequency: string, enabled: string|int, alert_threshold_score: string|int|null, alert_threshold_drop: string|int|null, last_audited_at: string|null, created_at: string, updated_at: string}> $rows */
+        /** @var array<array{id: string|int, project_id: string|int|null, url: string, name: string|null, audit_frequency: string, enabled: string|int, alerts_enabled: string|int, alert_threshold_score: string|int|null, alert_threshold_drop: string|int|null, last_audited_at: string|null, created_at: string, updated_at: string}> $rows */
         $rows = $stmt->fetchAll();
 
         return $this->hydrateMany($rows);
@@ -104,7 +106,7 @@ final readonly class SqliteUrlRepository implements UrlRepositoryInterface
             [$projectId],
         );
 
-        /** @var array<array{id: string|int, project_id: string|int|null, url: string, name: string|null, audit_frequency: string, enabled: string|int, alert_threshold_score: string|int|null, alert_threshold_drop: string|int|null, last_audited_at: string|null, created_at: string, updated_at: string}> $rows */
+        /** @var array<array{id: string|int, project_id: string|int|null, url: string, name: string|null, audit_frequency: string, enabled: string|int, alerts_enabled: string|int, alert_threshold_score: string|int|null, alert_threshold_drop: string|int|null, last_audited_at: string|null, created_at: string, updated_at: string}> $rows */
         $rows = $stmt->fetchAll();
 
         return $this->hydrateMany($rows);
@@ -119,7 +121,7 @@ final readonly class SqliteUrlRepository implements UrlRepositoryInterface
             'SELECT * FROM urls WHERE project_id IS NULL ORDER BY name ASC',
         );
 
-        /** @var array<array{id: string|int, project_id: string|int|null, url: string, name: string|null, audit_frequency: string, enabled: string|int, alert_threshold_score: string|int|null, alert_threshold_drop: string|int|null, last_audited_at: string|null, created_at: string, updated_at: string}> $rows */
+        /** @var array<array{id: string|int, project_id: string|int|null, url: string, name: string|null, audit_frequency: string, enabled: string|int, alerts_enabled: string|int, alert_threshold_score: string|int|null, alert_threshold_drop: string|int|null, last_audited_at: string|null, created_at: string, updated_at: string}> $rows */
         $rows = $stmt->fetchAll();
 
         return $this->hydrateMany($rows);
@@ -134,7 +136,7 @@ final readonly class SqliteUrlRepository implements UrlRepositoryInterface
             'SELECT * FROM urls WHERE enabled = 1 ORDER BY name ASC',
         );
 
-        /** @var array<array{id: string|int, project_id: string|int|null, url: string, name: string|null, audit_frequency: string, enabled: string|int, alert_threshold_score: string|int|null, alert_threshold_drop: string|int|null, last_audited_at: string|null, created_at: string, updated_at: string}> $rows */
+        /** @var array<array{id: string|int, project_id: string|int|null, url: string, name: string|null, audit_frequency: string, enabled: string|int, alerts_enabled: string|int, alert_threshold_score: string|int|null, alert_threshold_drop: string|int|null, last_audited_at: string|null, created_at: string, updated_at: string}> $rows */
         $rows = $stmt->fetchAll();
 
         return $this->hydrateMany($rows);
@@ -149,7 +151,7 @@ final readonly class SqliteUrlRepository implements UrlRepositoryInterface
     {
         $stmt = $this->database->query('SELECT * FROM urls WHERE url = ?', [$url]);
 
-        /** @var array{id: string|int, project_id: string|int|null, url: string, name: string|null, audit_frequency: string, enabled: string|int, alert_threshold_score: string|int|null, alert_threshold_drop: string|int|null, last_audited_at: string|null, created_at: string, updated_at: string}|false $row */
+        /** @var array{id: string|int, project_id: string|int|null, url: string, name: string|null, audit_frequency: string, enabled: string|int, alerts_enabled: string|int, alert_threshold_score: string|int|null, alert_threshold_drop: string|int|null, last_audited_at: string|null, created_at: string, updated_at: string}|false $row */
         $row = $stmt->fetch();
 
         if ($row === false) {
@@ -160,7 +162,7 @@ final readonly class SqliteUrlRepository implements UrlRepositoryInterface
     }
 
     /**
-     * @param  array<array{id: string|int, project_id: string|int|null, url: string, name: string|null, audit_frequency: string, enabled: string|int, alert_threshold_score: string|int|null, alert_threshold_drop: string|int|null, last_audited_at: string|null, created_at: string, updated_at: string}> $rows
+     * @param  array<array{id: string|int, project_id: string|int|null, url: string, name: string|null, audit_frequency: string, enabled: string|int, alerts_enabled: string|int, alert_threshold_score: string|int|null, alert_threshold_drop: string|int|null, last_audited_at: string|null, created_at: string, updated_at: string}> $rows
      * @return array<Url>
      */
     private function hydrateMany(array $rows): array
@@ -175,7 +177,7 @@ final readonly class SqliteUrlRepository implements UrlRepositoryInterface
     }
 
     /**
-     * @param array{id: string|int, project_id: string|int|null, url: string, name: string|null, audit_frequency: string, enabled: string|int, alert_threshold_score: string|int|null, alert_threshold_drop: string|int|null, last_audited_at: string|null, created_at: string, updated_at: string} $row
+     * @param array{id: string|int, project_id: string|int|null, url: string, name: string|null, audit_frequency: string, enabled: string|int, alerts_enabled: string|int, alert_threshold_score: string|int|null, alert_threshold_drop: string|int|null, last_audited_at: string|null, created_at: string, updated_at: string} $row
      */
     private function hydrateUrl(array $row): Url
     {
@@ -186,6 +188,7 @@ final readonly class SqliteUrlRepository implements UrlRepositoryInterface
             name: $row['name'],
             auditFrequency: AuditFrequency::from($row['audit_frequency']),
             enabled: (bool) $row['enabled'],
+            alertsEnabled: (bool) $row['alerts_enabled'],
             alertThresholdScore: $row['alert_threshold_score'] !== null ? (int) $row['alert_threshold_score'] : null,
             alertThresholdDrop: $row['alert_threshold_drop'] !== null ? (int) $row['alert_threshold_drop'] : null,
             lastAuditedAt: $row['last_audited_at'] !== null ? new DateTimeImmutable($row['last_audited_at']) : null,

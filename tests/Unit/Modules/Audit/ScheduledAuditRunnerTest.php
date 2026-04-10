@@ -157,6 +157,7 @@ final class ScheduledAuditRunnerTest extends TestCase
             name: 'Example ' . $id,
             auditFrequency: $frequency,
             enabled: true,
+            alertsEnabled: false,
             alertThresholdScore: null,
             alertThresholdDrop: null,
             lastAuditedAt: $lastAuditedAt,

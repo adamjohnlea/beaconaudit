@@ -129,6 +129,7 @@ final readonly class BulkImportService
                 name: $row['name'],
                 auditFrequency: $frequency,
                 enabled: true,
+                alertsEnabled: false,
                 alertThresholdScore: null,
                 alertThresholdDrop: null,
                 lastAuditedAt: null,

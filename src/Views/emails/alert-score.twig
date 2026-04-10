@@ -1,0 +1,18 @@
+Beacon Audit — Score Alert
+
+URL: {{ urlName }}
+Address: {{ urlAddress }}
+
+Current Score: {{ currentScore }}/100
+{% if previousScore is not null %}Previous Score: {{ previousScore }}/100 (Drop: {{ scoreDrop }} point{{ scoreDrop == 1 ? '' : 's' }})
+{% endif %}
+{% if scoreThresholdBreached %}
+Alert: Score of {{ currentScore }} has fallen at or below your threshold of {{ thresholdScore }}.
+{% endif %}
+{% if dropThresholdBreached %}
+Alert: Score dropped by {{ scoreDrop }} point{{ scoreDrop == 1 ? '' : 's' }}, exceeding your alert threshold of {{ thresholdDrop }}.
+{% endif %}
+Please review this URL in your Beacon Audit dashboard.
+
+—
+Beacon Audit

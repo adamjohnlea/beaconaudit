@@ -27,6 +27,28 @@ final readonly class SesEmailService implements EmailServiceInterface
         $this->fromAddress = $config['from_address'];
     }
 
+    public function send(string $to, string $subject, string $body): void
+    {
+        $encodedSubject = '=?UTF-8?B?' . base64_encode($subject) . '?=';
+
+        $rawMessage = "From: {$this->fromAddress}\r\n"
+            . "To: {$to}\r\n"
+            . "Subject: {$encodedSubject}\r\n"
+            . "MIME-Version: 1.0\r\n"
+            . "Content-Type: text/plain; charset=UTF-8\r\n"
+            . "Content-Transfer-Encoding: 7bit\r\n"
+            . "\r\n"
+            . "{$body}\r\n";
+
+        $this->client->sendEmail([
+            'Content' => [
+                'Raw' => [
+                    'Data' => $rawMessage,
+                ],
+            ],
+        ]);
+    }
+
     public function sendWithAttachment(
         string $to,
         string $subject,

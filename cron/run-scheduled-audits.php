@@ -16,6 +16,7 @@ use App\Modules\Audit\Infrastructure\Repositories\SqliteAuditComparisonRepositor
 use App\Modules\Audit\Infrastructure\Repositories\SqliteAuditRepository;
 use App\Modules\Audit\Infrastructure\Repositories\SqliteIssueRepository;
 use App\Modules\Dashboard\Application\Services\DashboardStatistics;
+use App\Modules\Notification\Application\Services\AlertNotifier;
 use App\Modules\Notification\Application\Services\AuditReportNotifier;
 use App\Modules\Notification\Application\Services\SesEmailService;
 use App\Modules\Notification\Infrastructure\Repositories\SqliteEmailSubscriptionRepository;
@@ -37,6 +38,29 @@ $retryStrategy = new RetryStrategy(maxRetries: $config['pagespeed']['max_retries
 $comparisonService = new ComparisonService();
 $comparisonRepository = new SqliteAuditComparisonRepository($database);
 
+// Build alert notifier if SES is configured, so alerts fire during audit runs
+$alertNotifier = null;
+$auditReportNotifier = null;
+if (($config['ses']['access_key'] ?? '') !== '' && ($config['ses']['from_address'] ?? '') !== '') {
+    $projectRepository = new SqliteProjectRepository($database);
+    $subscriptionRepository = new SqliteEmailSubscriptionRepository($database);
+    $loader = new FilesystemLoader(__DIR__ . '/../src/Views');
+    $twig = new Environment($loader, ['strict_variables' => true]);
+    $sesEmailService = new SesEmailService($config['ses']);
+    $alertNotifier = new AlertNotifier($subscriptionRepository, $sesEmailService, $twig);
+    $dashboardStatistics = new DashboardStatistics();
+    $pdfReportDataCollector = new PdfReportDataCollector($urlRepository, $auditRepository, $issueRepository, $dashboardStatistics);
+    $pdfReportService = new PdfReportService($twig);
+    $auditReportNotifier = new AuditReportNotifier(
+        $projectRepository,
+        $subscriptionRepository,
+        $pdfReportDataCollector,
+        $pdfReportService,
+        $sesEmailService,
+        $twig,
+    );
+}
+
 $auditService = new AuditService(
     $urlRepository,
     $auditRepository,
@@ -45,6 +69,7 @@ $auditService = new AuditService(
     $retryStrategy,
     $comparisonService,
     $comparisonRepository,
+    $alertNotifier,
 );
 
 $runner = new ScheduledAuditRunner($urlRepository, $auditService);
@@ -59,25 +84,8 @@ foreach ($results as $audit) {
     echo '  - URL ID ' . $audit->getUrlId() . ': score ' . $audit->getScore()->getValue() . ' (' . $audit->getStatus()->label() . ')' . PHP_EOL;
 }
 
-// Send email notifications for audited projects
-if ($results !== [] && ($config['ses']['access_key'] ?? '') !== '' && ($config['ses']['from_address'] ?? '') !== '') {
-    $projectRepository = new SqliteProjectRepository($database);
-    $subscriptionRepository = new SqliteEmailSubscriptionRepository($database);
-    $dashboardStatistics = new DashboardStatistics();
-    $pdfReportDataCollector = new PdfReportDataCollector($urlRepository, $auditRepository, $issueRepository, $dashboardStatistics);
-    $loader = new FilesystemLoader(__DIR__ . '/../src/Views');
-    $twig = new Environment($loader, ['strict_variables' => true]);
-    $pdfReportService = new PdfReportService($twig);
-    $sesEmailService = new SesEmailService($config['ses']);
-    $notifier = new AuditReportNotifier(
-        $projectRepository,
-        $subscriptionRepository,
-        $pdfReportDataCollector,
-        $pdfReportService,
-        $sesEmailService,
-        $twig,
-    );
-
+// Send project report emails for audited projects
+if ($results !== [] && $auditReportNotifier !== null) {
     /** @var array<int, true> $notifiedProjects */
     $notifiedProjects = [];
 
@@ -93,7 +101,7 @@ if ($results !== [] && ($config['ses']['access_key'] ?? '') !== '' && ($config['
         $notifiedProjects[$projectId] = true;
 
         try {
-            $notifier->notifyForProject($projectId);
+            $auditReportNotifier->notifyForProject($projectId);
             echo '  [email] Sent report for project ID ' . $projectId . PHP_EOL;
         } catch (\Throwable $e) {
             echo '  [email] Failed for project ID ' . $projectId . ': ' . $e->getMessage() . PHP_EOL;

@@ -27,6 +27,7 @@ use App\Modules\Auth\Application\Services\AuthenticationService;
 use App\Modules\Auth\Application\Services\UserService;
 use App\Modules\Auth\Infrastructure\Repositories\SqliteUserRepository;
 use App\Modules\Dashboard\Application\Services\DashboardStatistics;
+use App\Modules\Notification\Application\Services\AlertNotifier;
 use App\Modules\Notification\Application\Services\AuditReportNotifier;
 use App\Modules\Notification\Application\Services\SesEmailService;
 use App\Modules\Notification\Infrastructure\Repositories\SqliteEmailSubscriptionRepository;
@@ -98,6 +99,7 @@ $subscriptionRepository = new SqliteEmailSubscriptionRepository($database);
 $auditReportNotifier = null;
 if (($config['ses']['access_key'] ?? '') !== '' && ($config['ses']['from_address'] ?? '') !== '') {
     $sesEmailService = new SesEmailService($config['ses']);
+    $alertNotifier = new AlertNotifier($subscriptionRepository, $sesEmailService, $twig);
     $auditReportNotifier = new AuditReportNotifier(
         $projectRepository,
         $subscriptionRepository,
@@ -105,6 +107,16 @@ if (($config['ses']['access_key'] ?? '') !== '' && ($config['ses']['from_address
         $pdfReportService,
         $sesEmailService,
         $twig,
+    );
+    $auditService = new AuditService(
+        $urlRepository,
+        $auditRepository,
+        $issueRepository,
+        $pageSpeedClient,
+        $retryStrategy,
+        $comparisonService,
+        $comparisonRepository,
+        $alertNotifier,
     );
 }
 
